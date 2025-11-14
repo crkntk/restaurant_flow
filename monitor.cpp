@@ -15,14 +15,14 @@ Monitor::Monitor(int genCapacity, int vipCapacity)
 void Monitor::insert(RequestType request){
     bool onlyItem;
     pthread_mutex_lock(&mutex);
-    while(this->queueGenReq >= this->normalCapacity){
+    while(this->queueGenReq >= this->normalCapacity || (this->queueVipReq >=this->VIPCapacity && request == VIPRoom)){
         pthread_cond_wait(&seatsAvail,&this->mutex);
     }
     onlyItem = (queueGenReq == 0);
     this->buffer.push(request);
 
     if(onlyItem){
-        pthread_cond_signal(&unconsumedSeats);
+        pthread_cond_signal(&this->unconsumedSeats);
     }
     pthread_mutex_unlock(&this->mutex);
 }
@@ -33,4 +33,11 @@ RequestType Monitor::remove(){
     while(this-> queueGenReq == 0){
         pthread_cond_wait(&unconsumedSeats, &this->mutex);
     }
+    atCapacity = queueGenReq == this->normalCapacity;
+    request = this->buffer.front();
+    this->buffer.pop();
+    if(atCapacity){
+        pthread_cond_signal(&this->seatsAvail);
+    }
+    pthread_mutex_unlock(&this->mutex);
 }
