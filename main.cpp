@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <pthread.h>
+#include "producer.h"
+#include "consumer.h"
+#include "monitor.h"
+#define 
+
 using namespace std;
 int main(int argc, char **argv){
 
@@ -33,11 +39,22 @@ int main(int argc, char **argv){
             sleepGen = atoi(optarg); // Get logging string
             break;
         case 'v':
-            sleepGen = atoi(optarg); // Get logging string
+            sleepVip = atoi(optarg); // Get logging string
             break;
         default:
             break;
         }
     }
+
+    pthread_t genProdThread, vipProdThread;
+    pthread_t robTxThread, robRevThread;
+
+    Producer* genProd = new Producer(sleepGen,GeneralTable);
+    Producer* vipProd = new Producer(sleepVip,VIPRoom);
+
+    Consumer* robTx = new Consumer(sleepTX);
+    Consumer* robRev = new Consumer(sleepRev9);
+    Monitor* monitor = new Monitor();
+    
 
 }

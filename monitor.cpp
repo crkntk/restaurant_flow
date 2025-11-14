@@ -40,4 +40,5 @@ RequestType Monitor::remove(){
         pthread_cond_signal(&this->seatsAvail);
     }
     pthread_mutex_unlock(&this->mutex);
+    return request;
 }
