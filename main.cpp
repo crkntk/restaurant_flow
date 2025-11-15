@@ -55,6 +55,13 @@ int main(int argc, char **argv)
     Consumer *robTx = new Consumer(sleepTX, TX);
     Consumer *robRev = new Consumer(sleepRev9, Rev9);
     Monitor *monitor = new Monitor(seatingReq, semBarrier);
-    entityProdArgs *genProdArgs = new entityProdArgs
-        pthread_create(&genProdThread, NULL, &Producer::produce, (void *), )
+    entityProdArgs genProdArgs{&(*monitor), &(*genProd)};
+    entityProdArgs vipProdArgs{&(*monitor), &(*vipProd)};
+    entityConsArgs robTxArgs{&(*monitor), &(*robTx)};
+    entityConsArgs robRevArgs{&(*monitor), &(*robRev)};
+    pthread_create(&genProdThread, NULL, &Producer::produce, (void *)&genProdArgs);
+    pthread_create(&vipProdThread, NULL, &Producer::produce, (void *)&vipProdArgs);
+    pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);
+    pthread_create(&robRevThread, NULL, &Consumer::consume, (void *)&robRevArgs);
+    sem_wait(semBarrier);
 }
