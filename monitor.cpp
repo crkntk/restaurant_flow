@@ -71,6 +71,7 @@ RequestType Monitor::remove()
     pthread_mutex_lock(&mutex);
     while (this->queueGenReq == 0)
     {
+        // exit if production ended dont wait
         pthread_cond_wait(&unconsumedSeats, &this->mutex);
     }
     atCapacity = (queueGenReq == this->normalCapacity);
