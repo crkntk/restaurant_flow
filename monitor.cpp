@@ -1,6 +1,6 @@
 #include "monitor.h"
 
-Monitor::Monitor(int genCapacity, int vipCapacity = MONITOR_GEN_CAP, int maxProdReq = MONITOR_VIP_CAP)
+Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_GEN_CAP, int maxProdReq = MONITOR_VIP_CAP)
 {
     this->normalCapacity = genCapacity;
     this->VIPCapacity = vipCapacity;
@@ -8,7 +8,9 @@ Monitor::Monitor(int genCapacity, int vipCapacity = MONITOR_GEN_CAP, int maxProd
     this->queueGenReq = 0;
     this->queueVipReq = 0;
     this->reqProduced = 0;
+    this->barrierSem = barrierSem;
     this->maxReqHit = false;
+    this->unlockedBarrier = false;
     pthread_cond_init(&this->seatsAvail, NULL);
     pthread_cond_init(&this->unconsumedSeats, NULL);
     // pthread_cond_init(&this->VipSeatsAvail, NULL);
@@ -64,7 +66,7 @@ int Monitor::insert(RequestType request)
     pthread_mutex_unlock(&this->mutex);
     return 1;
 }
-RequestType* Monitor::remove()
+RequestType *Monitor::remove()
 {
     RequestType request;
     bool atCapacity;
@@ -72,7 +74,8 @@ RequestType* Monitor::remove()
     while (this->queueGenReq == 0)
     {
         // exit if production ended dont wait
-        if(maxReqHit){
+        if (maxReqHit)
+        {
             pthread_mutex_unlock(&mutex);
             return nullptr;
         }
@@ -85,6 +88,11 @@ RequestType* Monitor::remove()
     if (request == VIPRoom)
     {
         this->queueVipReq -= 1;
+    }
+    if (maxReqHit && this->queueGenReq <= 0 && unlockedBarrier == false)
+    {
+        unlockedBarrier = true;
+        sem_post(this->barrierSem);
     }
     if (atCapacity)
     {

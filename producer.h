@@ -4,9 +4,10 @@
 using namespace std;
 #ifndef PRODUCER_H
 #define PRODUCER_H
-struct entityFlowArgs {
-    Monitor* simMonitor;
-    Producer* producerObj;
+struct entityProdArgs
+{
+    Monitor *simMonitor;
+    Producer *producerObj;
 };
 class Producer
 {

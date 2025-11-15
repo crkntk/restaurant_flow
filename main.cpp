@@ -7,11 +7,6 @@
 #include "monitor.h"
 
 using namespace std;
-struct entityFlowArgs {
-    Monitor* simMonitor;
-    Producer* producerObj;
-    Consumer* consumerObj;
-};
 int main(int argc, char **argv)
 {
 
@@ -50,16 +45,16 @@ int main(int argc, char **argv)
             break;
         }
     }
-
+    sem_t *semBarrier;
+    sem_init(semBarrier, 0, 0);
     pthread_t genProdThread, vipProdThread;
     pthread_t robTxThread, robRevThread;
 
     Producer *genProd = new Producer(sleepGen, GeneralTable);
     Producer *vipProd = new Producer(sleepVip, VIPRoom);
-
-    Consumer *robTx = new Consumer(sleepTX);
-    Consumer *robRev = new Consumer(sleepRev9);
-    Monitor *monitor = new Monitor(seatingReq);
-
-
+    Consumer *robTx = new Consumer(sleepTX, TX);
+    Consumer *robRev = new Consumer(sleepRev9, Rev9);
+    Monitor *monitor = new Monitor(seatingReq, semBarrier);
+    entityProdArgs *genProdArgs = new entityProdArgs
+        pthread_create(&genProdThread, NULL, &Producer::produce, (void *), )
 }
