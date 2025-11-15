@@ -5,10 +5,10 @@
 #include "producer.h"
 #include "consumer.h"
 #include "monitor.h"
-#define 
 
 using namespace std;
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
 
     int seatingReq = 110;
     int sleepTX = 0;
@@ -49,12 +49,10 @@ int main(int argc, char **argv){
     pthread_t genProdThread, vipProdThread;
     pthread_t robTxThread, robRevThread;
 
-    Producer* genProd = new Producer(sleepGen,GeneralTable);
-    Producer* vipProd = new Producer(sleepVip,VIPRoom);
+    Producer *genProd = new Producer(sleepGen, GeneralTable);
+    Producer *vipProd = new Producer(sleepVip, VIPRoom);
 
-    Consumer* robTx = new Consumer(sleepTX);
-    Consumer* robRev = new Consumer(sleepRev9);
-    Monitor* monitor = new Monitor();
-    
-
+    Consumer *robTx = new Consumer(sleepTX);
+    Consumer *robRev = new Consumer(sleepRev9);
+    Monitor *monitor = new Monitor(seatingReq);
 }
