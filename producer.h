@@ -10,6 +10,7 @@ class Producer
 public:
     Producer(int sleepTime, RequestType type);
     RequestType prodType;
+    int sleepTime;
     static void *produce(void *args);
 };
 #endif

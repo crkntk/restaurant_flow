@@ -7,6 +7,11 @@
 #include "monitor.h"
 
 using namespace std;
+struct entityFlowArgs {
+    Monitor* simMonitor;
+    Producer* producerObj;
+    Consumer* consumerObj;
+};
 int main(int argc, char **argv)
 {
 
@@ -55,4 +60,6 @@ int main(int argc, char **argv)
     Consumer *robTx = new Consumer(sleepTX);
     Consumer *robRev = new Consumer(sleepRev9);
     Monitor *monitor = new Monitor(seatingReq);
+
+
 }

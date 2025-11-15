@@ -23,6 +23,6 @@ public:
     bool maxReqHit;
     queue<RequestType> buffer;
     int insert(RequestType request);
-    RequestType remove();
+    RequestType* remove();
 };
 #endif

@@ -64,7 +64,7 @@ int Monitor::insert(RequestType request)
     pthread_mutex_unlock(&this->mutex);
     return 1;
 }
-RequestType Monitor::remove()
+RequestType* Monitor::remove()
 {
     RequestType request;
     bool atCapacity;
@@ -72,15 +72,24 @@ RequestType Monitor::remove()
     while (this->queueGenReq == 0)
     {
         // exit if production ended dont wait
+        if(maxReqHit){
+            pthread_mutex_unlock(&mutex);
+            return nullptr;
+        }
         pthread_cond_wait(&unconsumedSeats, &this->mutex);
     }
     atCapacity = (queueGenReq == this->normalCapacity);
     request = this->buffer.front();
     this->buffer.pop();
+    this->queueGenReq -= 1;
+    if (request == VIPRoom)
+    {
+        this->queueVipReq -= 1;
+    }
     if (atCapacity)
     {
         pthread_cond_signal(&this->seatsAvail);
     }
     pthread_mutex_unlock(&this->mutex);
-    return request;
+    return &request;
 }
