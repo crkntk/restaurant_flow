@@ -71,7 +71,6 @@ int Monitor::insert(RequestType request)
         pthread_mutex_unlock(&mutex);
         return 0;
     }
-    onlyItem = (queueGenReq == 0);
     this->buffer.push(request);
     this->reqProduced += 1;
     this->queueGenReq += 1;
@@ -82,10 +81,7 @@ int Monitor::insert(RequestType request)
     this->prodByType[request] += 1;
     this->queueTypes[request] += 1;
     output_request_added(request, this->prodByType, this->queueTypes);
-    if (onlyItem)
-    {
-        pthread_cond_signal(&this->unconsumedSeats);
-    }
+    pthread_cond_signal(&this->unconsumedSeats);
     if (this->maxProdRequests <= this->reqProduced)
     {
         this->maxReqHit = true;
