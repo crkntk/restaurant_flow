@@ -62,6 +62,15 @@ int Monitor::insert(RequestType request)
         }
     }
 
+    if (this->maxProdRequests <= this->reqProduced)
+    {
+        this->maxReqHit = true;
+        pthread_cond_broadcast(&unconsumedSeats);
+        pthread_cond_broadcast(&VipSeatsAvail);
+        pthread_cond_broadcast(&seatsAvail);
+        pthread_mutex_unlock(&mutex);
+        return 0;
+    }
     onlyItem = (queueGenReq == 0);
     this->buffer.push(request);
     this->reqProduced += 1;
