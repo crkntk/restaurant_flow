@@ -38,7 +38,7 @@ int Monitor::insert(RequestType request)
         pthread_mutex_unlock(&mutex);
         return 0;
     }
-    while ((this->queueVipReq >= this->VIPCapacity && request == VIPRoom) || this->queueGenReq >= this->normalCapacity)
+    while ((request == VIPRoom && this->queueVipReq >= this->VIPCapacity) || this->queueGenReq >= this->normalCapacity)
     {
         if (this->maxProdRequests <= this->reqProduced)
         {
