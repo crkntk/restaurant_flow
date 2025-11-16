@@ -18,8 +18,10 @@ public:
     sem_t *barrierSem;
     int maxProdRequests;
     int normalCapacity;
-    int prodByType[RequestTypeN];
-    int consByRob[ConsumerTypeN];
+    unsigned int prodByType[RequestTypeN];
+    unsigned int consByType[RequestTypeN];
+    unsigned int consByRob[ConsumerTypeN];
+    unsigned int queueTypes[RequestTypeN];
     int VIPCapacity;
     int queueGenReq;
     int queueVipReq;

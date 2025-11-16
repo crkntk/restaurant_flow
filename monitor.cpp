@@ -1,5 +1,5 @@
 #include "monitor.h"
-
+#include "log.h"
 Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_GEN_CAP, int maxProdReq = MONITOR_VIP_CAP)
 {
     this->normalCapacity = genCapacity;
@@ -17,6 +17,8 @@ Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_G
     pthread_mutex_init(&this->mutex, NULL);
     for(int i = 0; i < RequestTypeN; i++){
         this->prodByType[i] = 0;
+        this->consByType[i] = 0;
+        this->queueTypes[i] = 0;
     }
     for(int i = 0; i < ConsumerTypeN; i++){
         this->consByRob[i] = 0;
@@ -57,7 +59,8 @@ int Monitor::insert(RequestType request)
         this->queueVipReq += 1;
     }
     this->prodByType[request] += 1;
-
+    this->queueTypes[request] += 1;
+    output_request_added(request,this->prodByType, this->queueTypes);
     if (onlyItem)
     {
         pthread_cond_signal(&this->unconsumedSeats);
@@ -93,10 +96,13 @@ RequestType *Monitor::remove(Consumers robot)
     this->buffer.pop();
     this->queueGenReq -= 1;
     this->consByRob[robot] += 1;
+    this->queueTypes[request] -= 1;
     if (request == VIPRoom)
     {
         this->queueVipReq -= 1;
     }
+    this->consByType[request] += 1;
+    output_request_removed(robot,request,this->consByType,this->queueTypes);
     if (maxReqHit && this->queueGenReq <= 0 && unlockedBarrier == false)
     {
         unlockedBarrier = true;
