@@ -19,9 +19,10 @@ Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_G
         this->prodByType[i] = 0;
         this->consByType[i] = 0;
         this->queueTypes[i] = 0;
+        for(int j = 0; j < ConsumerTypeN; j++){
+                this->consByRob[j] = 0;
+                this->consByRobType[j][i] = 0;
     }
-    for(int i = 0; i < ConsumerTypeN; i++){
-        this->consByRob[i] = 0;
     }
 }
 
@@ -96,6 +97,7 @@ RequestType *Monitor::remove(Consumers robot)
     this->buffer.pop();
     this->queueGenReq -= 1;
     this->consByRob[robot] += 1;
+    this->consByRobType[robot][request] += 1;
     this->queueTypes[request] -= 1;
     if (request == VIPRoom)
     {
@@ -107,6 +109,7 @@ RequestType *Monitor::remove(Consumers robot)
     {
         unlockedBarrier = true;
         sem_post(this->barrierSem);
+        output_production_history(this->prodByType,(unsigned int **) this->consByRobType);
     }
     if (atCapacity)
     {

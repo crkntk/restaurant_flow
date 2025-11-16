@@ -22,6 +22,7 @@ public:
     unsigned int consByType[RequestTypeN];
     unsigned int consByRob[ConsumerTypeN];
     unsigned int queueTypes[RequestTypeN];
+    unsigned int consByRobType[ConsumerTypeN][RequestTypeN];
     int VIPCapacity;
     int queueGenReq;
     int queueVipReq;

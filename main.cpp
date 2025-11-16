@@ -64,4 +64,6 @@ int main(int argc, char **argv)
     pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);
     pthread_create(&robRevThread, NULL, &Consumer::consume, (void *)&robRevArgs);
     sem_wait(semBarrier);
+
+    return 0;
 }
