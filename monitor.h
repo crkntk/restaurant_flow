@@ -28,6 +28,6 @@ public:
     bool unlockedBarrier;
     queue<RequestType> buffer;
     int insert(RequestType request);
-    RequestType *remove();
+    RequestType *remove(Consumers robot);
 };
 #endif

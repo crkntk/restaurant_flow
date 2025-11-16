@@ -17,7 +17,7 @@ void *Consumer::consume(void *entityArgs)
     Consumer *currConsumer = ((entityConsArgs *)entityArgs)->consumerObj;
     while (true)
     {
-        RequestType *consumedType = monitor->remove();
+        RequestType *consumedType = monitor->remove(currConsumer->ConsType);
         if (consumedType == nullptr)
         {
             break;
