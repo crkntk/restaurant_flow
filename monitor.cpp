@@ -15,6 +15,12 @@ Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_G
     pthread_cond_init(&this->unconsumedSeats, NULL);
     // pthread_cond_init(&this->VipSeatsAvail, NULL);
     pthread_mutex_init(&this->mutex, NULL);
+    for(int i = 0; i < RequestTypeN; i++){
+        this->prodByType[i] = 0;
+    }
+    for(int i = 0; i < ConsumerTypeN i++){
+        this->consByRob[i] = 0;
+    }
 }
 
 int Monitor::insert(RequestType request)

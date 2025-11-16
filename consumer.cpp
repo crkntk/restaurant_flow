@@ -1,6 +1,9 @@
+#include <thread>
+#include <chrono>
 #include "consumer.h"
 #include "monitor.h"
 #include "seating.h"
+using namespace std;
 Consumer::Consumer(int timeSleep, ConsumerType consumerType)
 {
     this->timeSleep = timeSleep;
@@ -19,5 +22,6 @@ void *Consumer::consume(void *entityArgs)
         {
             break;
         }
+        this_thread::sleep_for(chrono::milliseconds(currConsumer->timeSleep));
     }
 }

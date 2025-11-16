@@ -1,5 +1,8 @@
+#include <thread>
+#include <chrono>
 #include "producer.h"
 #include "monitor.h"
+using namespace std;
 Producer::Producer(int sleepTime, RequestType type)
 {
     this->sleepTime = sleepTime;
@@ -17,5 +20,6 @@ void *Producer::produce(void *entityStruct)
         {
             break;
         }
+        this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
     }
 }
