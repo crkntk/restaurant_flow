@@ -13,6 +13,7 @@ void *Producer::produce(void *entityStruct)
 {
     Monitor *monitor = ((entityProdArgs *)entityStruct)->simMonitor;
     Producer *currProducer = ((entityProdArgs *)entityStruct)->producerObj;
+    this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
     while (true)
     {
         int itemsProduced = monitor->insert(currProducer->prodType);
