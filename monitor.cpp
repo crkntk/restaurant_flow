@@ -46,9 +46,14 @@ int Monitor::insert(RequestType request)
         if (this->maxProdRequests <= this->reqProduced)
         {
             this->maxReqHit = true;
-            pthread_cond_broadcast(&unconsumedSeats);
-            pthread_cond_broadcast(&VipSeatsAvail);
-            pthread_cond_broadcast(&seatsAvail);
+            pthread_cond_signal(&unconsumedSeats);
+            pthread_cond_signal(&unconsumedSeats);
+
+            pthread_cond_signal(&VipSeatsAvail);
+            pthread_cond_signal(&VipSeatsAvail);
+
+            pthread_cond_signal(&seatsAvail);
+            pthread_cond_signal(&seatsAvail);
             pthread_mutex_unlock(&mutex);
             return 0;
         }
@@ -65,9 +70,14 @@ int Monitor::insert(RequestType request)
     if (this->maxProdRequests <= this->reqProduced)
     {
         this->maxReqHit = true;
-        pthread_cond_broadcast(&unconsumedSeats);
-        pthread_cond_broadcast(&VipSeatsAvail);
-        pthread_cond_broadcast(&seatsAvail);
+        pthread_cond_signal(&unconsumedSeats);
+        pthread_cond_signal(&unconsumedSeats);
+
+        pthread_cond_signal(&VipSeatsAvail);
+        pthread_cond_signal(&VipSeatsAvail);
+
+        pthread_cond_signal(&seatsAvail);
+        pthread_cond_signal(&seatsAvail);
         pthread_mutex_unlock(&mutex);
         return 0;
     }
@@ -85,9 +95,14 @@ int Monitor::insert(RequestType request)
     if (this->maxProdRequests <= this->reqProduced)
     {
         this->maxReqHit = true;
-        pthread_cond_broadcast(&unconsumedSeats);
-        pthread_cond_broadcast(&VipSeatsAvail);
-        pthread_cond_broadcast(&seatsAvail);
+        pthread_cond_signal(&unconsumedSeats);
+        pthread_cond_signal(&unconsumedSeats);
+
+        pthread_cond_signal(&VipSeatsAvail);
+        pthread_cond_signal(&VipSeatsAvail);
+
+        pthread_cond_signal(&seatsAvail);
+        pthread_cond_signal(&seatsAvail);
         pthread_mutex_unlock(&mutex);
         return 1;
     }
@@ -127,6 +142,14 @@ int Monitor::remove(Consumers robot)
         unlockedBarrier = true;
         sem_post(this->barrierSem);
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType);
+        pthread_cond_signal(&unconsumedSeats);
+        pthread_cond_signal(&unconsumedSeats);
+
+        pthread_cond_signal(&VipSeatsAvail);
+        pthread_cond_signal(&VipSeatsAvail);
+
+        pthread_cond_signal(&seatsAvail);
+        pthread_cond_signal(&seatsAvail);
     }
     if (request == VIPRoom)
     {
