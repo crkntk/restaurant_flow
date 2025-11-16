@@ -63,7 +63,12 @@ int main(int argc, char **argv)
     pthread_create(&vipProdThread, NULL, &Producer::produce, (void *)&vipProdArgs);
     pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);
     pthread_create(&robRevThread, NULL, &Consumer::consume, (void *)&robRevArgs);
+    pthread_join(genProdThread,NULL);
+    pthread_join(vipProdThread,NULL);
     sem_wait(&semBarrier);
+    pthread_join(robTxThread,NULL);
+    pthread_join(robRevThread,NULL);
 
+    sem_destroy(&semBarrier);
     return 0;
 }

@@ -24,4 +24,5 @@ void *Consumer::consume(void *entityArgs)
         }
         this_thread::sleep_for(chrono::milliseconds(currConsumer->timeSleep));
     }
+    return nullptr;
 }

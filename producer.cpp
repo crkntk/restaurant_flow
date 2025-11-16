@@ -22,4 +22,5 @@ void *Producer::produce(void *entityStruct)
         }
         this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
     }
+    return nullptr;
 }

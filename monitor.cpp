@@ -1,6 +1,6 @@
 #include "monitor.h"
 #include "log.h"
-Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity, int maxProdReq)
+Monitor::Monitor(int maxProdReq,sem_t *barrierSem, int genCapacity, int vipCapacity)
 {
     this->normalCapacity = genCapacity;
     this->VIPCapacity = vipCapacity;
@@ -19,10 +19,10 @@ Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity, int maxPro
         this->prodByType[i] = 0;
         this->consByType[i] = 0;
         this->queueTypes[i] = 0;
+    }
         for(int j = 0; j < ConsumerTypeN; j++){
                 this->consByRob[j] = 0;
-                this->consByRobType[j][i] = 0;
-    }
+                this->consByRobType[j] = new unsigned int[RequestTypeN]();
     }
 }
 
@@ -104,17 +104,14 @@ int Monitor::remove(Consumers robot)
         this->queueVipReq -= 1;
     }
     this->consByType[request] += 1;
-    output_request_removed(robot,request,this->consByType,this->queueTypes);
+    output_request_removed(robot,request,this->consByRobType[robot],this->queueTypes);
     if (maxReqHit && this->queueGenReq <= 0 && unlockedBarrier == false)
     {
         unlockedBarrier = true;
         sem_post(this->barrierSem);
         output_production_history(this->prodByType,(unsigned int **) this->consByRobType);
     }
-    if (atCapacity)
-    {
-        pthread_cond_signal(&this->seatsAvail);
-    }
+    pthread_cond_signal(&this->seatsAvail);
     pthread_mutex_unlock(&this->mutex);
     return 1;
 }
