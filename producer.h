@@ -1,14 +1,9 @@
 #include <atomic>
 #include "seating.h"
-
+#include "monitor.h"
 using namespace std;
 #ifndef PRODUCER_H
 #define PRODUCER_H
-struct entityProdArgs
-{
-    Monitor *simMonitor;
-    Producer *producerObj;
-};
 class Producer
 {
 public:
@@ -16,5 +11,10 @@ public:
     RequestType prodType;
     int sleepTime;
     static void *produce(void *args);
+};
+struct entityProdArgs
+{
+    Monitor *simMonitor;
+    Producer *producerObj;
 };
 #endif

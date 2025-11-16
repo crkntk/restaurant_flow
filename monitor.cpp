@@ -1,6 +1,6 @@
 #include "monitor.h"
 #include "log.h"
-Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity = MONITOR_GEN_CAP, int maxProdReq = MONITOR_VIP_CAP)
+Monitor::Monitor(int genCapacity, sem_t *barrierSem, int vipCapacity, int maxProdReq)
 {
     this->normalCapacity = genCapacity;
     this->VIPCapacity = vipCapacity;

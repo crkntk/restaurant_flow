@@ -1,13 +1,8 @@
 
 #include "seating.h"
-
+#include "monitor.h"
 #ifndef CONSUMER_H
 #define CONSUMER_H
-struct entityConsArgs
-{
-    Monitor *simMonitor;
-    Consumer *consumerObj;
-};
 class Consumer
 {
 public:
@@ -15,5 +10,10 @@ public:
     int timeSleep;
     ConsumerType ConsType;
     static void *consume(void *args);
+};
+struct entityConsArgs
+{
+    Monitor *simMonitor;
+    Consumer *consumerObj;
 };
 #endif
