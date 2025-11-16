@@ -45,8 +45,8 @@ int main(int argc, char **argv)
             break;
         }
     }
-    sem_t *semBarrier;
-    sem_init(semBarrier, 0, 0);
+    sem_t semBarrier;
+    sem_init(&semBarrier, 0, 0);
     pthread_t genProdThread, vipProdThread;
     pthread_t robTxThread, robRevThread;
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     Producer *vipProd = new Producer(sleepVip, VIPRoom);
     Consumer *robTx = new Consumer(sleepTX, TX);
     Consumer *robRev = new Consumer(sleepRev9, Rev9);
-    Monitor *monitor = new Monitor(seatingReq, semBarrier);
+    Monitor *monitor = new Monitor(seatingReq, &semBarrier);
     entityProdArgs genProdArgs{&(*monitor), &(*genProd)};
     entityProdArgs vipProdArgs{&(*monitor), &(*vipProd)};
     entityConsArgs robTxArgs{&(*monitor), &(*robTx)};
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     pthread_create(&vipProdThread, NULL, &Producer::produce, (void *)&vipProdArgs);
     pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);
     pthread_create(&robRevThread, NULL, &Consumer::consume, (void *)&robRevArgs);
-    sem_wait(semBarrier);
+    sem_wait(&semBarrier);
 
     return 0;
 }

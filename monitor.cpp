@@ -77,7 +77,7 @@ int Monitor::insert(RequestType request)
     pthread_mutex_unlock(&this->mutex);
     return 1;
 }
-RequestType *Monitor::remove(Consumers robot)
+int Monitor::remove(Consumers robot)
 {
     RequestType request;
     bool atCapacity;
@@ -88,7 +88,7 @@ RequestType *Monitor::remove(Consumers robot)
         if (maxReqHit)
         {
             pthread_mutex_unlock(&mutex);
-            return nullptr;
+            return 0;
         }
         pthread_cond_wait(&unconsumedSeats, &this->mutex);
     }
@@ -116,5 +116,5 @@ RequestType *Monitor::remove(Consumers robot)
         pthread_cond_signal(&this->seatsAvail);
     }
     pthread_mutex_unlock(&this->mutex);
-    return &request;
+    return 1;
 }
