@@ -7,6 +7,7 @@
 #include "monitor.h"
 
 using namespace std;
+
 int main(int argc, char **argv)
 {
 
@@ -55,19 +56,17 @@ int main(int argc, char **argv)
     Consumer *robTx = new Consumer(sleepTX, TX);
     Consumer *robRev = new Consumer(sleepRev9, Rev9);
     Monitor *monitor = new Monitor(seatingReq, &semBarrier);
-    entityProdArgs genProdArgs{&(*monitor), &(*genProd)};
-    entityProdArgs vipProdArgs{&(*monitor), &(*vipProd)};
-    entityConsArgs robTxArgs{&(*monitor), &(*robTx)};
-    entityConsArgs robRevArgs{&(*monitor), &(*robRev)};
+    prodEntityArgs genProdArgs{&(*monitor), &(*genProd)};
+    prodEntityArgs vipProdArgs{&(*monitor), &(*vipProd)};
+    consEntityArgs robTxArgs{&(*monitor), &(*robTx)};
+    consEntityArgs robRevArgs{&(*monitor), &(*robRev)};
     pthread_create(&genProdThread, NULL, &Producer::produce, (void *)&genProdArgs);
     pthread_create(&vipProdThread, NULL, &Producer::produce, (void *)&vipProdArgs);
     pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);
     pthread_create(&robRevThread, NULL, &Consumer::consume, (void *)&robRevArgs);
-    pthread_join(genProdThread,NULL);
-    pthread_join(vipProdThread,NULL);
+    pthread_join(genProdThread, NULL);
+    pthread_join(vipProdThread, NULL);
     sem_wait(&semBarrier);
-    pthread_join(robTxThread,NULL);
-    pthread_join(robRevThread,NULL);
 
     sem_destroy(&semBarrier);
     return 0;

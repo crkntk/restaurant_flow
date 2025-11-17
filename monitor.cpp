@@ -32,52 +32,39 @@ int Monitor::insert(RequestType request)
 {
     bool onlyItem;
     pthread_mutex_lock(&mutex);
-    if (this->maxProdRequests <= this->reqProduced)
+    bool vipCapHit = this->queueVipReq >= this->VIPCapacity;
+    bool genCapHit = this->queueGenReq >= this->normalCapacity;
+    this->maxReqHit = (this->maxProdRequests <= this->reqProduced);
+    if (this->maxReqHit == true)
     {
-        this->maxReqHit = true;
-        pthread_cond_broadcast(&unconsumedSeats);
-        pthread_cond_broadcast(&VipSeatsAvail);
-        pthread_cond_broadcast(&seatsAvail);
+        this->signal_all_cond((int)ConsumerTypeN);
         pthread_mutex_unlock(&mutex);
         return 0;
     }
-    while ((request == VIPRoom && this->queueVipReq >= this->VIPCapacity) || this->queueGenReq >= this->normalCapacity)
+    while ((request == VIPRoom && vipCapHit == true) || genCapHit == true)
     {
-        if (this->maxProdRequests <= this->reqProduced)
+        if (this->maxReqHit == true)
         {
-            this->maxReqHit = true;
-            pthread_cond_signal(&unconsumedSeats);
-            pthread_cond_signal(&unconsumedSeats);
-
-            pthread_cond_signal(&VipSeatsAvail);
-            pthread_cond_signal(&VipSeatsAvail);
-
-            pthread_cond_signal(&seatsAvail);
-            pthread_cond_signal(&seatsAvail);
+            this->signal_all_cond((int)ConsumerTypeN);
             pthread_mutex_unlock(&mutex);
             return 0;
         }
-        if (request == VIPRoom)
-        {
-            pthread_cond_wait(&VipSeatsAvail, &this->mutex);
-        }
-        else
+        if (genCapHit == true)
         {
             pthread_cond_wait(&seatsAvail, &this->mutex);
         }
+        else
+        {
+            pthread_cond_wait(&VipSeatsAvail, &this->mutex);
+        }
+        this->maxReqHit = (this->maxProdRequests <= this->reqProduced);
+        vipCapHit = this->queueVipReq >= this->VIPCapacity;
+        genCapHit = this->queueGenReq >= this->normalCapacity;
     }
-
-    if (this->maxProdRequests <= this->reqProduced)
+    this->maxReqHit = (this->maxProdRequests <= this->reqProduced);
+    if (maxReqHit == true)
     {
-        this->maxReqHit = true;
-        pthread_cond_signal(&unconsumedSeats);
-        pthread_cond_signal(&unconsumedSeats);
-
-        pthread_cond_signal(&VipSeatsAvail);
-        pthread_cond_signal(&VipSeatsAvail);
-
-        pthread_cond_signal(&seatsAvail);
-        pthread_cond_signal(&seatsAvail);
+        this->signal_all_cond((int)ConsumerTypeN);
         pthread_mutex_unlock(&mutex);
         return 0;
     }
@@ -92,17 +79,10 @@ int Monitor::insert(RequestType request)
     this->queueTypes[request] += 1;
     output_request_added(request, this->prodByType, this->queueTypes);
     pthread_cond_signal(&this->unconsumedSeats);
-    if (this->maxProdRequests <= this->reqProduced)
+    this->maxReqHit = this->maxProdRequests <= this->reqProduced;
+    if (this->maxReqHit == true)
     {
-        this->maxReqHit = true;
-        pthread_cond_signal(&unconsumedSeats);
-        pthread_cond_signal(&unconsumedSeats);
-
-        pthread_cond_signal(&VipSeatsAvail);
-        pthread_cond_signal(&VipSeatsAvail);
-
-        pthread_cond_signal(&seatsAvail);
-        pthread_cond_signal(&seatsAvail);
+        this->signal_all_cond((int)ConsumerTypeN);
         pthread_mutex_unlock(&mutex);
         return 1;
     }
@@ -117,7 +97,7 @@ int Monitor::remove(Consumers robot)
     while (this->queueGenReq == 0)
     {
         // exit if production ended dont wait
-        if (maxReqHit)
+        if (maxReqHit == true)
         {
             pthread_mutex_unlock(&mutex);
             return 0;
@@ -142,20 +122,25 @@ int Monitor::remove(Consumers robot)
         unlockedBarrier = true;
         sem_post(this->barrierSem);
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType);
-        pthread_cond_signal(&unconsumedSeats);
-        pthread_cond_signal(&unconsumedSeats);
-
-        pthread_cond_signal(&VipSeatsAvail);
-        pthread_cond_signal(&VipSeatsAvail);
-
-        pthread_cond_signal(&seatsAvail);
-        pthread_cond_signal(&seatsAvail);
+        this->signal_all_cond((int)ConsumerTypeN);
     }
     if (request == VIPRoom)
     {
         pthread_cond_signal(&this->VipSeatsAvail);
     }
     pthread_cond_signal(&this->seatsAvail);
+    pthread_cond_signal(&this->seatsAvail);
     pthread_mutex_unlock(&this->mutex);
     return 1;
+}
+
+void Monitor::signal_all_cond(int times)
+{
+    for (int i = 0; i < times; i++)
+    {
+        pthread_cond_signal(&(this->unconsumedSeats));
+        pthread_cond_signal(&(this->VipSeatsAvail));
+        pthread_cond_signal(&(this->seatsAvail));
+    }
+    return;
 }

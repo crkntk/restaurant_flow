@@ -9,10 +9,14 @@ Producer::Producer(int sleepTime, RequestType type)
     this->prodType = type;
 }
 
-void *Producer::produce(void *entityStruct)
+void *Producer::produce(void *prodArgs)
 {
-    Monitor *monitor = ((entityProdArgs *)entityStruct)->simMonitor;
-    Producer *currProducer = ((entityProdArgs *)entityStruct)->producerObj;
+    Monitor *monitor = ((prodEntityArgs *)prodArgs)->simMonitor;
+    Producer *currProducer = ((prodEntityArgs *)prodArgs)->producerObj;
+    if (currProducer->sleepTime > 0)
+    {
+        this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
+    }
     this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
     while (true)
     {
@@ -21,7 +25,10 @@ void *Producer::produce(void *entityStruct)
         {
             break;
         }
-        this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
+        if (currProducer->sleepTime > 0)
+        {
+            this_thread::sleep_for(chrono::milliseconds(currProducer->sleepTime));
+        }
     }
     return nullptr;
 }

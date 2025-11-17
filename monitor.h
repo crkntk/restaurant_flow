@@ -32,5 +32,8 @@ public:
     queue<RequestType> buffer;
     int insert(RequestType request);
     int remove(Consumers robot);
+
+private:
+    void signal_all_cond(int times);
 };
 #endif

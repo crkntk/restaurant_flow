@@ -10,11 +10,11 @@ Consumer::Consumer(int timeSleep, ConsumerType consumerType)
     this->ConsType = consumerType;
 }
 
-void *Consumer::consume(void *entityArgs)
+void *Consumer::consume(void *consArgs)
 {
 
-    Monitor *monitor = ((entityConsArgs *)entityArgs)->simMonitor;
-    Consumer *currConsumer = ((entityConsArgs *)entityArgs)->consumerObj;
+    Monitor *monitor = ((consEntityArgs *)consArgs)->simMonitor;
+    Consumer *currConsumer = ((consEntityArgs *)consArgs)->consumerObj;
     while (true)
     {
         int consumedAmount = monitor->remove(currConsumer->ConsType);

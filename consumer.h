@@ -11,7 +11,7 @@ public:
     ConsumerType ConsType;
     static void *consume(void *args);
 };
-struct entityConsArgs
+struct consEntityArgs
 {
     Monitor *simMonitor;
     Consumer *consumerObj;

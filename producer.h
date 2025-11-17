@@ -12,9 +12,10 @@ public:
     int sleepTime;
     static void *produce(void *args);
 };
-struct entityProdArgs
+struct prodEntityArgs
 {
     Monitor *simMonitor;
     Producer *producerObj;
 };
+
 #endif
