@@ -16,11 +16,11 @@ Consumer::Consumer(int timeSleep, ConsumerType consumerType)
 void *Consumer::consume(void *consArgs)
 {
     /*
-    This function is for the posix library to run the current conumer thread. It argument is a pointer to a structure
+    This function is for the posix library to run the current consumer thread. It argument is a pointer to a structure
     that hols the simulation monitor and the consumer object with sleep and type attributes
     */
     Monitor *monitor = ((consEntityArgs *)consArgs)->simMonitor;        // extract monitor from arg structure
-    Consumer *currConsumer = ((consEntityArgs *)consArgs)->consumerObj; // extract consumer object from argument ponter
+    Consumer *currConsumer = ((consEntityArgs *)consArgs)->consumerObj; // extract consumer object from argument pointer
     while (true)
     {
         // This while loop tries to insert a request type using the monitor which manages the removing and request queue
@@ -34,6 +34,6 @@ void *Consumer::consume(void *consArgs)
         // Call to remove
         int consumedAmount = monitor->remove(currConsumer->ConsType);
     }
-    // This returns a nulll pointer for the void return fo the function
+    // This returns a null pointer for the void return fo the function
     return nullptr;
 }

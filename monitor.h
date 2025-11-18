@@ -9,7 +9,7 @@
 using namespace std;
 /*
 This is the monitor class that handles all the requests to remove and insert to the buffer
-It handles its capancity and signals by condition to other threads running the remove and insert functions
+It handles its capacity and signals by condition to other threads running the remove and insert functions
 Handles the vip room space and general space as well as signaling the consumer threads for running the critical section and
 waiting for more producers to make requests as well as the last consumer and max requests
 */
@@ -19,10 +19,10 @@ public:
     /* This is a constructor for our monitor object it takes in the maximum amount of requests that can be produced
         and the barrier semaphore to signal from the last consumer for main thread to continue
         Our general capacity and vip capacity are default arguments unless specified in future iterations we may want
-        the user to have control over how much space there is for the general buffer capacity and the vip cacpacity
+        the user to have control over how much space there is for the general buffer capacity and the vip capacity
     */
     Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity = MONITOR_GEN_CAP, int vipCapacity = MONITOR_VIP_CAP);
-    int insert(RequestType request); // This function tries to insert a request type into the buffer this is based on mutual exclusion and will block if we are out of our contraints for capacity and vip capcity depending on request
+    int insert(RequestType request); // This function tries to insert a request type into the buffer this is based on mutual exclusion and will block if we are out of our constraints for capacity and vip capcity depending on request
     int remove(Consumers robot);     // This function removes a request from the queue it follows mutual exclusion and blocks if there are no items and waits for producer if the max requests has not been hit
 
 private:
@@ -38,7 +38,7 @@ private:
     unsigned int *consByRobType[ConsumerTypeN];               // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
     int maxProdRequests;                                      // This is the max amount of requests that can be produced by producers of any kind
     int normalCapacity;                                       // This is the normal capacity in our buffer
-    int VIPCapacity;                                          // This is the vip capacity within our queue capacity. This is not separate from the general capacity it is an amount within the normal queue cacapcity
+    int VIPCapacity;                                          // This is the vip capacity within our queue capacity. This is not separate from the general capacity it is an amount within the normal queue capacity
     int queueGenReq;                                          // How many requests are in the queue in general including vip
     int queueVipReq;                                          // How many vip requests are in teh queue
     int reqProduced;                                          // How many requests have been produced so far

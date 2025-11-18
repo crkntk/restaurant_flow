@@ -16,13 +16,13 @@ public:
     ConsumerType ConsType;                              // Consumer Type/name for the current robot
     /*
     Static function for the consumer thread for the posix library to start the thread with a pointer to the arguments held by a structure
-    The functions consumes an objec but passes the consuming part to the pointer to the monitor for delegation to manage teh buffer
+    The functions consumes an object but passes the consuming part to the pointer to the monitor for delegation to manage teh buffer
     The functionality is to loop call remove and sleep for the given amount
     */
     static void *consume(void *args);
     /*
-    Our strucuture that holds the arguments for the posix thread creation for the static function in our consumer class
-    It holds a pointer to our monitor and a pointer to the current conumer object
+    Our structure that holds the arguments for the posix thread creation for the static function in our consumer class
+    It holds a pointer to our monitor and a pointer to the current consumer object
     */
     struct consEntityArgs
     {

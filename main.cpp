@@ -12,8 +12,8 @@ int main(int argc, char **argv)
 {
     /*This is our main entry point for our program. It simulate producer consumer problem
     with two producer threads and two consumer threads with some requests items having
-    higher prioritiy than others. It is a restaurant simulated producer consumer problems with
-    vip seats and general seats in the queue. We distinguish between producers by what is bieng
+    higher priority than others. It is a restaurant simulated producer consumer problems with
+    vip seats and general seats in the queue. We distinguish between producers by what is being
     produced vip or general seats and two consumer robots are running as two threads which may have
     different sleep times for thread delays of consumption. Producers also have this sleep delays
     */
@@ -67,14 +67,14 @@ int main(int argc, char **argv)
     Consumer *robRev = new Consumer(sleepRev9, Rev9);         // Rev 9 consumer robot with sleep time
     // We instantiate our monitor object to pass to our threads to handle the producer consumer mechanism
     //  our monitor needs the max amount of requests that can be produced as as seating request and
-    // the semaphoere barrier for last consumer to signal
+    // the semaphore barrier for last consumer to signal
     Monitor *monitor = new Monitor(seatingReq, &semBarrier); // instantiate our monitor
     // We instantiate our arguments structures for our static functions in our producer and consumer class files
     // we need this in order to pass arguments and start our posix threads with the given functions
     // We use pointers for our argument objects our monitor pointer and our producer pointers with the needed attributes
     Producer::prodEntityArgs genProdArgs{&(*monitor), &(*genProd)}; // Start our general request argument structure
-    Producer::prodEntityArgs vipProdArgs{&(*monitor), &(*vipProd)}; // Start our vip request arguemtns structure
-    Consumer::consEntityArgs robTxArgs{&(*monitor), &(*robTx)};     // Start our TX robot agument structure
+    Producer::prodEntityArgs vipProdArgs{&(*monitor), &(*vipProd)}; // Start our vip request arguments structure
+    Consumer::consEntityArgs robTxArgs{&(*monitor), &(*robTx)};     // Start our TX robot argument structure
     Consumer::consEntityArgs robRevArgs{&(*monitor), &(*robRev)};   // Start our Rev9  argument structure
     // Create and start our producer and consumer threads with our pointer to our arguments and
     //  and the static class function
@@ -90,7 +90,6 @@ int main(int argc, char **argv)
     pthread_join(genProdThread, NULL); // Join general producer thread
     pthread_join(vipProdThread, NULL); // Join vip producer thread
     sem_wait(&semBarrier);             // Our main thread waits for the signal that the last consumer consumed the last request
-
-    sem_destroy(&semBarrier);
+    sem_destroy(&semBarrier);          // destroy semaphore to release resources
     return 0;
 }
