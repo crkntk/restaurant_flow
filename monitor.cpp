@@ -93,30 +93,39 @@ int Monitor::insert(RequestType request)
     if (maxReqHit == true)
     {
         // This branch is if we hit the max amount of allowe requests since sleep
-        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);
-        pthread_mutex_unlock(&mutex);
-        return 0;
+        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN); // This signals all the consumers and producers waiting on conditions so they are not blocked after no more producing
+        pthread_mutex_unlock(&mutex);                                 // unlock our mutex leaving critical section
+        return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
-    this->buffer.push(request);
-    this->reqProduced += 1;
-    this->queueGenReq += 1;
+    this->buffer.push(request); // push to our buffer since we have done all the checks needed for the conditions and capcity
+    // Update our values for logging and the amount of requests in the queue
+    this->reqProduced += 1; // update amount of requests produced overal
+    this->queueGenReq += 1; // updatred the amount of requests in our queue
     if (request == VIPRoom)
     {
+        // This branch is for if the request was vip we update our vip amount of requests that are in the queue
         this->queueVipReq += 1;
     }
+    // We updatre our arrays for produced amount by request type overall and the amount of each of that is actually in the queue
     this->prodByType[request] += 1;
     this->queueTypes[request] += 1;
-    output_request_added(request, this->prodByType, this->queueTypes);
-    pthread_cond_signal(&this->unconsumedSeats);
-    this->maxReqHit = this->maxProdRequests <= this->reqProduced;
+    output_request_added(request, this->prodByType, this->queueTypes); // log output of our request that was added along with the overall reqeusts by type and the amount of requests by type in the queue
+    pthread_cond_signal(&this->unconsumedSeats);                       // Since we inserted a request we must signal the consumer threads waiting for the unconsumed condition to consume a seat
+    this->maxReqHit = this->maxProdRequests <= this->reqProduced;      // We must check that we didnt hit our max amount of requests after added the request and signalling
     if (this->maxReqHit == true)
     {
-        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);
-        pthread_mutex_unlock(&mutex);
-        return 1;
+        /*This branch treats the condition of after inserting we hit a the maximum amount of requests
+        if we dont have this before we unlock we will hit a deadlock if our vip hit its capacity and both consuemr threads
+        are blocked and only one is signaled. On the consumer side the same thread may have a differnt value for hte boolean
+        and get stuck at the top of remove if after waitning it pops and maximum requests hit is false
+        We must do this check in the area of mutual exclusion to assert the value will be accurate
+        */
+        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN); // We need to signal all condition on the number of threads for consumer and producer in order to avoid deadlocks and threads blocked after we have hit the max amount of produced items
+        pthread_mutex_unlock(&mutex);                                 // unlock our mutex leaving critical section
+        return 1;                                                     // We hit max here when we inserted so we return 1 to flag that we added 1 reqeusts
     }
-    pthread_mutex_unlock(&this->mutex);
-    return 1;
+    pthread_mutex_unlock(&this->mutex); // exit of critical section for the whole function if we added a request without hitting the conditions to exit otherwise
+    return 1;                           // return 1 since we inserted a request
 }
 int Monitor::remove(Consumers robot)
 {
@@ -146,7 +155,7 @@ int Monitor::remove(Consumers robot)
     }
     this->consByType[request] += 1;
     output_request_removed(robot, request, this->consByRobType[robot], this->queueTypes);
-    if (maxReqHit && this->queueGenReq <= 0 && unlockedBarrier == false)
+    if (maxReqHit == true && this->queueGenReq <= 0 && unlockedBarrier == false)
     {
         unlockedBarrier = true;
         sem_post(this->barrierSem);
