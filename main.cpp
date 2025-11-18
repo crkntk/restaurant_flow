@@ -1,3 +1,4 @@
+// Name: Carlos Reyes REDID: 131068259
 #include <stdio.h>
 #include <unistd.h>
 #include <cstdlib>
@@ -76,8 +77,8 @@ int main(int argc, char **argv)
     Producer::prodEntityArgs vipProdArgs{&(*monitor), &(*vipProd)}; // Start our vip request arguments structure
     Consumer::consEntityArgs robTxArgs{&(*monitor), &(*robTx)};     // Start our TX robot argument structure
     Consumer::consEntityArgs robRevArgs{&(*monitor), &(*robRev)};   // Start our Rev9  argument structure
-    // Create and start our producer and consumer threads with our pointer to our arguments and
-    //  and the static class function
+    // Create and start our producer and consumer threads with our pointer to our arguments
+    // and the static class function
     pthread_create(&genProdThread, NULL, &Producer::produce, (void *)&genProdArgs); // Create general producer thread
     pthread_create(&vipProdThread, NULL, &Producer::produce, (void *)&vipProdArgs); // Create vip producer thread
     pthread_create(&robTxThread, NULL, &Consumer::consume, (void *)&robTxArgs);     // Create Tx robot consumer thread

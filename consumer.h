@@ -1,4 +1,4 @@
-
+// Name: Carlos Reyes REDID: 131068259
 #include "seating.h"
 #include "monitor.h"
 #ifndef CONSUMER_H

@@ -1,3 +1,4 @@
+// Name: Carlos Reyes REDID: 131068259
 #include <thread>
 #include <chrono>
 #include "consumer.h"
@@ -32,7 +33,7 @@ void *Consumer::consume(void *consArgs)
             this_thread::sleep_for(chrono::milliseconds(currConsumer->timeSleep));
         }
         // Call to remove
-        int consumedAmount = monitor->remove(currConsumer->ConsType);
+        monitor->remove(currConsumer->ConsType);
     }
     // This returns a null pointer for the void return fo the function
     return nullptr;

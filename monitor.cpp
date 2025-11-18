@@ -1,3 +1,4 @@
+// Name: Carlos Reyes REDID: 131068259
 #include "monitor.h"
 #include "log.h"
 Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapacity)
@@ -44,7 +45,6 @@ int Monitor::insert(RequestType request)
     It returns 1 for one request inserted and returns 0 when the maximum amount of requests that can be produced
     has been hit.
     */
-    bool onlyItem;
     pthread_mutex_lock(&mutex);                                     // lock our mutex for mutual exclusion of critical section to manage our queue
     bool vipCapHit = this->queueVipReq >= this->VIPCapacity;        // We want to check if our vip capacity has been hit and store in boolean
     bool genCapHit = this->queueGenReq >= this->normalCapacity;     // check if we hit our general capacity of our queue max
@@ -133,8 +133,7 @@ int Monitor::remove(Consumers robot)
         This function removes a request from the buffer. The buffer is handled as FIFO. It takes in the robot that consumes the
         request as the argument to simulate the removal by the robot thread in a mutually exclusive way
     */
-    RequestType request; // Our request type that is removed from the queue
-    bool atCapacity;
+    RequestType request;        // Our request type that is removed from the queue
     pthread_mutex_lock(&mutex); // We lock our mutex for our critical section to be access in a mutually exclusive way
     while (this->queueGenReq == 0)
     {
@@ -151,13 +150,12 @@ int Monitor::remove(Consumers robot)
         }
         pthread_cond_wait(&unconsumedSeats, &this->mutex); // We wait for more seats to be produced by our producer threads
     }
-    atCapacity = (queueGenReq == this->normalCapacity); // Check if we are at capacity
-    request = this->buffer.front();                     // Get the request from the front of our queue and store
-    this->buffer.pop();                                 // pop the request from our queue
-    this->queueGenReq -= 1;                             // We update the amount of requests in our buffer
-    this->consByRob[robot] += 1;                        // Update the amount of request that have been consumed for this consumer/Robot
-    this->consByRobType[robot][request] += 1;           // Update the amount of request array of the current consumer/robot has consumed per type of request
-    this->queueTypes[request] -= 1;                     // Update the types of requests that are in the queue based on the request removed
+    request = this->buffer.front();           // Get the request from the front of our queue and store
+    this->buffer.pop();                       // pop the request from our queue
+    this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
+    this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
+    this->consByRobType[robot][request] += 1; // Update the amount of request array of the current consumer/robot has consumed per type of request
+    this->queueTypes[request] -= 1;           // Update the types of requests that are in the queue based on the request removed
     if (request == VIPRoom)
     {
         // If our request was a vip request we must update the amount of vip requests in the queue

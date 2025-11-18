@@ -1,3 +1,4 @@
+// Name: Carlos Reyes REDID: 131068259
 #include <atomic>
 #include "seating.h"
 #include "monitor.h"
