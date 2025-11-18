@@ -6,23 +6,28 @@
 using namespace std;
 Consumer::Consumer(int timeSleep, ConsumerType consumerType)
 {
+    /*
+    This is a constructor for the current consumer that hold the sleeping amount for the consumer thread and the type/name of the consumer
+    */
     this->timeSleep = timeSleep;
     this->ConsType = consumerType;
 }
 
 void *Consumer::consume(void *consArgs)
 {
+    /*
+    This function is for the posix library to run the current conumer thread. It arguments is a structure to a
 
+    */
     Monitor *monitor = ((consEntityArgs *)consArgs)->simMonitor;
     Consumer *currConsumer = ((consEntityArgs *)consArgs)->consumerObj;
     while (true)
     {
-        int consumedAmount = monitor->remove(currConsumer->ConsType);
-        if (consumedAmount == 0)
+        if (currConsumer->timeSleep > 0)
         {
-            break;
+            this_thread::sleep_for(chrono::milliseconds(currConsumer->timeSleep));
         }
-        this_thread::sleep_for(chrono::milliseconds(currConsumer->timeSleep));
+        int consumedAmount = monitor->remove(currConsumer->ConsType);
     }
     return nullptr;
 }
