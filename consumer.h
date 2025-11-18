@@ -26,7 +26,7 @@ public:
     */
     struct consEntityArgs
     {
-        Monitor *simMonitor;   // The monitor for hte current simulation
+        Monitor *simMonitor;   // The monitor for the current simulation manages all removes from consumer and its available slots
         Consumer *consumerObj; // The current consumer object with its attributes needed to runt he static function
     };
 };
