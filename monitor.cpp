@@ -3,17 +3,17 @@
 Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapacity)
 {
     /*
-    This contructor is for our monitor to instantiate takes in max produced request allowed for producer threads
+    This constructor is for our monitor to instantiate takes in max produced request allowed for producer threads
     the semaphore barries to signal last consumer the genCapcity which is the general capacity of our queues
     and the vip capacity which is the vip slots within our general capacity
     */
-    this->normalCapacity = genCapacity;              // instantiate our normal capacity for our buffer
-    this->VIPCapacity = vipCapacity;                 //  instantiate our vip cacpacity
-    this->maxProdRequests = maxProdReq;              // instantiate max amounf of requests that can be produced
-    this->queueGenReq = 0;                           // instantiate requests in the general queue
-    this->queueVipReq = 0;                           // instantiate VIP requests in queueu
-    this->reqProduced = 0;                           // instantiate total amount of requests produced
-    this->barrierSem = barrierSem;                   // instantiate our barrier semaphore pointer
+    this->normalCapacity = genCapacity;              // Instantiate our normal capacity for our buffer
+    this->VIPCapacity = vipCapacity;                 // Instantiate our vip cacpacity
+    this->maxProdRequests = maxProdReq;              // Instantiate max amounf of requests that can be produced
+    this->queueGenReq = 0;                           // Instantiate requests in the general queue
+    this->queueVipReq = 0;                           // Instantiate VIP requests in queueu
+    this->reqProduced = 0;                           // Instantiate total amount of requests produced
+    this->barrierSem = barrierSem;                   // Instantiate our barrier semaphore pointer
     this->maxReqHit = false;                         // Instantiate our boolean to tell if we have hit the max amount of requests allowed
     this->unlockedBarrier = false;                   // Instantiate our boolean to check if our semaphore barrier has been unlocked by the last thread
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
@@ -32,7 +32,7 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapa
     {
         // This for loop instantiates our array on the bases on consumer type robot
         this->consByRob[j] = 0;                                    // How many requests has each robot consumed
-        this->consByRobType[j] = new unsigned int[RequestTypeN](); // How many requests has each robot consumed per type. This is an array of pointers that are instantiated to zero
+        this->consByRobType[j] = new unsigned int[RequestTypeN](); // How many requests has each robot consumed per type. This is an array of pointers that are instantiated to zero. Used for logging
     }
 }
 
@@ -117,8 +117,8 @@ int Monitor::insert(RequestType request)
         /*This branch treats the condition of after inserting we hit a the maximum amount of requests
         if we dont have this before we unlock we will hit a deadlock if our vip hit its capacity and both consuemr threads
         are blocked and only one is signaled. On the consumer side the same thread may have a differnt value for hte boolean
-        and get stuck at the top of remove if after waitning it pops and maximum requests hit is false
-        We must do this check in the area of mutual exclusion to assert the value will be accurate
+        and get stuck at the top of remove function while loop if after waiting it pops and maximum requests hit is false
+        We must do this check in the area of mutual exclusion/critical region to assert the value will be accurate
         */
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN); // We need to signal all condition on the number of threads for consumer and producer in order to avoid deadlocks and threads blocked after we have hit the max amount of produced items
         pthread_mutex_unlock(&mutex);                                 // unlock our mutex leaving critical section
@@ -129,57 +129,90 @@ int Monitor::insert(RequestType request)
 }
 int Monitor::remove(Consumers robot)
 {
-    RequestType request;
+    /*
+        This function removes a request from the buffer. The buffer is handled as FIFO. It takes in the robot that consumes the
+        request as the argument to simulate the removal by the robot thread in a mutually exclusive way
+    */
+    RequestType request; // Our request type that is removed from the queue
     bool atCapacity;
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex); // We lock our mutex for our critial section to be access in a mutuall exclusive way
     while (this->queueGenReq == 0)
     {
-        // exit if production ended dont wait
+        /*This while loop checks to see if there are any requests in the queue
+        if there is none we wait for our producers to make more requests based on the unconsumed seats conditions
+        If a consumer thread is woken and still there are no seats available to consume in the queue then we make it wait again
+        */
         if (maxReqHit == true)
         {
-            pthread_mutex_unlock(&mutex);
-            return 0;
+            // We check if we have hit the max amount of requests that can be produced. We should not wait for a producer to signal
+            // unconsumed seats since there will be no producer producing and the thread will jsut be blocked
+            pthread_mutex_unlock(&mutex); // We release our mutex lock
+            return 0;                     // return 0 since we hit max after waiting and did not consumer a request
         }
-        pthread_cond_wait(&unconsumedSeats, &this->mutex);
+        pthread_cond_wait(&unconsumedSeats, &this->mutex); // We wait for more seats to be produced by our producer threads
     }
-    atCapacity = (queueGenReq == this->normalCapacity);
-    request = this->buffer.front();
-    this->buffer.pop();
-    this->queueGenReq -= 1;
-    this->consByRob[robot] += 1;
-    this->consByRobType[robot][request] += 1;
-    this->queueTypes[request] -= 1;
+    atCapacity = (queueGenReq == this->normalCapacity); // Check if we are at capacity
+    request = this->buffer.front();                     // Get the request from the front of our queue and store
+    this->buffer.pop();                                 // pop the request from our queue
+    this->queueGenReq -= 1;                             // We update the amount of requests in our buffer
+    this->consByRob[robot] += 1;                        // Update the amount of request that have been consumed for this consumer/Robot
+    this->consByRobType[robot][request] += 1;           // Update the amount of request array of the currente consumer/robot has consumed per type of request
+    this->queueTypes[request] -= 1;                     // Update the types of reqeusts that are in the queue based on the request removed
     if (request == VIPRoom)
     {
+        // If our request was a vip request we must update the amount of vip requests in the queue
         this->queueVipReq -= 1;
     }
-    this->consByType[request] += 1;
+    this->consByType[request] += 1; // Update our consumed requests by type array for the amount of requests consumed by type
+    // This is the output function for logging the request that was removed takes in robot
+    // the request removed the 2D array of requests consumed by robot type and request type and the request types that are currently in queue
     output_request_removed(robot, request, this->consByRobType[robot], this->queueTypes);
-    if (maxReqHit == true && this->queueGenReq <= 0 && unlockedBarrier == false)
+    if ((this->maxReqHit == true) && (this->queueGenReq <= 0) && (unlockedBarrier == false))
     {
-        unlockedBarrier = true;
-        sem_post(this->barrierSem);
-        output_production_history(this->prodByType, (unsigned int **)this->consByRobType);
-        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);
+        // This branch is for our last consumer that removed the last request in the queue and there are
+        // no more requests being produced and its the first time we hit this branch
+        // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
+        unlockedBarrier = true;                                                            // set our boolean for posting once to the semaphore barrier to true
+        output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of reqeust by type
+        this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
+        sem_post(this->barrierSem);                                                        // We post to our semaphor so that our main thread can continue and kill off the threads still running
     }
-    if (request == VIPRoom)
+    else
     {
-        pthread_cond_signal(&this->VipSeatsAvail);
+        // This branch is if we removed and we are not in the last consumed request
+        // We signal the thread based on what was removed
+        if (request == VIPRoom)
+        {
+            // Branch to signal the condition for vip seats available to fill
+            pthread_cond_signal(&this->VipSeatsAvail);
+        }
+        else
+        {
+            // Signal if request is of general type in case the blocked for general producing requests is blocked signal that there is genral sits available to fill
+            pthread_cond_signal(&this->seatsAvail);
+        }
     }
-    pthread_cond_signal(&this->seatsAvail);
-    pthread_cond_signal(&this->seatsAvail);
-    pthread_mutex_unlock(&this->mutex);
-    return 1;
+    pthread_mutex_unlock(&this->mutex); // release the lock after removal
+    return 1;                           // return one for the amount of removed requests
 }
 
 void Monitor::signal_all_cond(int numConsumers, int numProducers)
 {
+    /*
+    This functions signals all the conditions that have to do with the amount of consumers and producers
+    in respect to each of the conditions pertaining to the consumers or the producers
+    In future iterations it would be beneficial to have this conditions in two array with pointers to the conditions
+    This function is used at the end of producing and the end of consuming so no threads are blocked
+    This is not assuming that we know the amount of threads blocked but it is the max amount of threads that could be blocked for this conditions
+    */
     for (int i = 0; i < numConsumers; i++)
     {
+        // Signals all consumer threads for its conditions so its not blocked
         pthread_cond_signal(&(this->unconsumedSeats));
     }
     for (int i = 0; i < numProducers; i++)
     {
+        // Signal all producer threads if any for its conditions so they are not blocked
         pthread_cond_signal(&(this->VipSeatsAvail));
         pthread_cond_signal(&(this->seatsAvail));
     }
