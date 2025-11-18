@@ -26,25 +26,25 @@ public:
     int remove(Consumers robot);     // This function removes a request from the queue it follows mutual exclusion and blocks if there are no items and waits for producer if the max requests has not been hit
 
 private:
-    pthread_mutex_t mutex;                      // This is our mutex for mutuall exclusion of critical sections
-    pthread_cond_t VipSeatsAvail;               // This condition is for vip seats that are available to fill
-    pthread_cond_t seatsAvail;                  // This is condition to signal or wait on that there are general seats available to fill
-    pthread_cond_t unconsumedSeats;             // This condition is thread condition is to signal or wait on there are seats in buffer that have not been consumed
-    sem_t *barrierSem;                          // This is our pionter to our barrier semaphore to signal our main thread that the last consumer has consumed the last seat so main thread can continue
-    unsigned int prodByType[RequestTypeN];      // This array is to keep track the requests that have been produced by type
-    unsigned int consByType[RequestTypeN];      // This array is to keep track of the requests that have been consumed by type
-    unsigned int consByRob[ConsumerTypeN];      // This array is to keep track of how many requests each type/name of robot have consumed
-    unsigned int queueTypes[RequestTypeN];      // This array keeps track of how many of each type are in the queue
-    unsigned int *consByRobType[ConsumerTypeN]; // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
-    int maxProdRequests;                        // This is the max amount of reqeusts that can be produced by producers of any kind
-    int normalCapacity;                         // This is the normal capacity in our buffer
-    int VIPCapacity;                            // This is the vip capacity within our queue capancity. This is not seperate from the gerneral capancity it is an amaount within the normal queue cacapcity
-    int queueGenReq;                            // How many requests are in the queue in general including vip
-    int queueVipReq;                            // How many vip requests are in teh queue
-    int reqProduced;                            // How many requests have been produced so far
-    bool maxReqHit;                             // The maximum amount of requests producers can produce and insert in the queue overall
-    bool unlockedBarrier;                       // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled
-    queue<RequestType> buffer;                  // This is the general buffer for our requests the Request Type is the type of request that is an enumerator defined in seating.h
-    void signal_all_cond(int times);            // This function signals all the conditions currently in our monitor a certain amount of times
+    pthread_mutex_t mutex;                                    // This is our mutex for mutuall exclusion of critical sections
+    pthread_cond_t VipSeatsAvail;                             // This condition is for vip seats that are available to fill
+    pthread_cond_t seatsAvail;                                // This is condition to signal or wait on that there are general seats available to fill
+    pthread_cond_t unconsumedSeats;                           // This condition is thread condition is to signal or wait on there are seats in buffer that have not been consumed
+    sem_t *barrierSem;                                        // This is our pionter to our barrier semaphore to signal our main thread that the last consumer has consumed the last seat so main thread can continue
+    unsigned int prodByType[RequestTypeN];                    // This array is to keep track the requests that have been produced by type
+    unsigned int consByType[RequestTypeN];                    // This array is to keep track of the requests that have been consumed by type
+    unsigned int consByRob[ConsumerTypeN];                    // This array is to keep track of how many requests each type/name of robot have consumed
+    unsigned int queueTypes[RequestTypeN];                    // This array keeps track of how many of each type are in the queue
+    unsigned int *consByRobType[ConsumerTypeN];               // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
+    int maxProdRequests;                                      // This is the max amount of reqeusts that can be produced by producers of any kind
+    int normalCapacity;                                       // This is the normal capacity in our buffer
+    int VIPCapacity;                                          // This is the vip capacity within our queue capancity. This is not seperate from the gerneral capancity it is an amaount within the normal queue cacapcity
+    int queueGenReq;                                          // How many requests are in the queue in general including vip
+    int queueVipReq;                                          // How many vip requests are in teh queue
+    int reqProduced;                                          // How many requests have been produced so far
+    bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
+    bool unlockedBarrier;                                     // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled
+    queue<RequestType> buffer;                                // This is the general buffer for our requests the Request Type is the type of request that is an enumerator defined in seating.h
+    void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor a certain amount of times
 };
 #endif

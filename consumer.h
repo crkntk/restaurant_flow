@@ -17,7 +17,7 @@ public:
     /*
     Static function for the consumer thread for the posix library to start the thread with a pointer to the arguments held by a structure
     The functions consumes an objec but passes the consuming part to the pointer to the monitor for delegation to manage teh buffer
-    The fucntionality is to  loop call remove and sleep for the given amount
+    The functionality is to loop call remove and sleep for the given amount
     */
     static void *consume(void *args);
     /*
