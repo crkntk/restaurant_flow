@@ -2,6 +2,11 @@
 #include "log.h"
 Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapacity)
 {
+    /*
+    This contructor is for our monitor to instantiate takes in max produced request allowed for producer threads
+    the semaphore barries to signal last consumer the genCapcity which is the general capacity of our queues
+    and the vip capacity which is the vip slots within our general capacity
+    */
     this->normalCapacity = genCapacity;
     this->VIPCapacity = vipCapacity;
     this->maxProdRequests = maxProdReq;

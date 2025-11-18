@@ -6,7 +6,7 @@
 /*
 This class is the consumer class that keeps track of the sleep for the consumer thread and the name/type
 of the robot for the thread. It has the static function that is for the posix thread library to run in our main function
-to run the current consumer thread with its arguments structure
+to run the current consumer thread with its arguments structure. We grab our request types from the enumerator in seating.h
 */
 class Consumer
 {
