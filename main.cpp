@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <pthread.h>
+#include <string>
 #include "producer.h"
 #include "consumer.h"
 #include "monitor.h"
@@ -23,9 +24,10 @@ int main(int argc, char **argv)
     int sleepRev9 = 0;    // Default time for our Rev 9 robot thread
     int sleepGen = 0;     // Default sleep time for our general producer thread
     int sleepVip = 0;     // Default time for our vip seat producer thread
+    string policy = "FIFO";
     // We extract above default optional arguments
     int option;
-    while ((option = getopt(argc, argv, "s:x:r:g:v:")) != -1)
+    while ((option = getopt(argc, argv, "s:x:r:g:v:p:")) != -1)
     {
         /* If the option has an argument, optarg is set to point to the
          * argument associated with the option.  For example, if
@@ -49,6 +51,8 @@ int main(int argc, char **argv)
         case 'v':
             sleepVip = atoi(optarg); // Sleep time for our vip producer thread
             break;
+        case 'p':
+            policy = optarg;
         default:
             break;
         }
