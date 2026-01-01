@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <queue>
+#include <string>
 #include "seating.h"
 #define MONITOR_GEN_CAP 20 // We define our buffer capacity here
 #define MONITOR_VIP_CAP 6  // We define our Vip room capacity here
@@ -22,7 +23,7 @@ public:
         Our general capacity and vip capacity are default arguments unless specified in future iterations we may want
         the user to have control over how much space there is for the general buffer capacity and the vip capacity
     */
-    Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity = MONITOR_GEN_CAP, int vipCapacity = MONITOR_VIP_CAP);
+    Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacity = MONITOR_GEN_CAP, int vipCapacity = MONITOR_VIP_CAP);
     int insert(RequestType request); // This function tries to insert a request type into the buffer this is based on mutual exclusion and will block if we are out of our constraints for capacity and vip capcity depending on request
     int remove(Consumers robot);     // This function removes a request from the queue it follows mutual exclusion and blocks if there are no items and waits for producer if the max requests has not been hit
 
@@ -44,8 +45,17 @@ private:
     int queueVipReq;                                          // How many vip requests are in teh queue
     int reqProduced;                                          // How many requests have been produced so far
     bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
-    bool unlockedBarrier;                                     // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled
-    queue<RequestType> buffer;                                // This is the general buffer for our requests the Request Type is the type of request that is an enumerator defined in seating.h
+    bool unlockedBarrier;                           // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled  
+    string policy; 
+    int fifoPriority;                                                                 
     void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor for each thread of consumer and producer
+    struct RequestObj{
+        int priority;
+        RequestType request;
+        bool operator<(const RequestObj& other) const {
+        return priority < other.priority; // Highest priority value comes first
+    }
+    };
+    priority_queue<RequestObj> buffer;    // This is the general buffer for our requests the Request Type is the type of request that is an enumerator defined in seating.h  
 };
 #endif
