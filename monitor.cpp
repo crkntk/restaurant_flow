@@ -1,7 +1,7 @@
 // Name: Carlos Reyes REDID: 131068259
 #include "monitor.h"
 #include "log.h"
-Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapacity)
+Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacity, int vipCapacity)
 {
     /*
     This constructor is for our monitor to instantiate takes in max produced request allowed for producer threads
@@ -17,6 +17,8 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem, int genCapacity, int vipCapa
     this->barrierSem = barrierSem;                   // Instantiate our barrier semaphore pointer
     this->maxReqHit = false;                         // Instantiate our boolean to tell if we have hit the max amount of requests allowed
     this->unlockedBarrier = false;                   // Instantiate our boolean to check if our semaphore barrier has been unlocked by the last thread
+    this->policy = policy;
+    this->fifoPriority = 0; 
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
     pthread_cond_init(&this->unconsumedSeats, NULL); // Instantiate our condition to signal that there are unconsumed seats on buffer or wait on seats by consumers
     pthread_cond_init(&this->VipSeatsAvail, NULL);   // We instantiate our condition to signal that there are vip seats available to fill
@@ -97,7 +99,22 @@ int Monitor::insert(RequestType request)
         pthread_mutex_unlock(&mutex);                                 // unlock our mutex leaving critical section
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
-    this->buffer.push(request); // push to our buffer since we have done all the checks needed for the conditions and capcity
+    RequestObj insReqObj;
+    if(this->policy == "fifo"){
+        insReqObj = {this->fifoPriority,request};
+    }
+    else if(this->policy == "vip_priority"){
+        if(request == VIPRoom){
+            insReqObj = {2,request};
+        }
+        else{
+            insReqObj = {1,request};
+        }
+    }
+    else if (this->policy == "fair"){
+
+    }
+    this->buffer.push(insReqObj); // push to our buffer since we have done all the checks needed for the conditions and capcity
     // Update our values for logging and the amount of requests in the queue
     this->reqProduced += 1; // update amount of requests produced overall
     this->queueGenReq += 1; // updated the amount of requests in our queue
