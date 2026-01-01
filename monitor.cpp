@@ -104,13 +104,14 @@ int Monitor::insert(RequestType request)
     RequestObj insReqObj;
     if(this->policy == "fifo"){
         insReqObj = {this->fifoPriority,request};
+        this->fifoPriority += 1;
     }
     else if(this->policy == "vip_priority"){
         if(request == VIPRoom){
-            insReqObj = {2,request};
+            insReqObj = {1,request};
         }
         else{
-            insReqObj = {1,request};
+            insReqObj = {2,request};
         }
     }
     else if (this->policy == "fair"){
@@ -123,18 +124,18 @@ int Monitor::insert(RequestType request)
         bool significant = fabsf(averageDiff) > threshold;
         if(averageDiff > threshold){
             if(request == VIPRoom){
-                insReqObj = {2,request};
+                insReqObj = {1,request};
             }
             else{
-                insReqObj = {1,request};
+                insReqObj = {2,request};
             }
         }
         else if (averageDiff < -threshold){
             if(request == VIPRoom){
-                insReqObj = {1,request};
+                insReqObj = {2,request};
             }
             else{
-                insReqObj = {2,request};
+                insReqObj = {1,request};
             }
         }
         else{

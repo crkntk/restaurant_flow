@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     int sleepRev9 = 0;    // Default time for our Rev 9 robot thread
     int sleepGen = 0;     // Default sleep time for our general producer thread
     int sleepVip = 0;     // Default time for our vip seat producer thread
-    string policy = "FIFO";
+    string policy = "fifo";
     // We extract above default optional arguments
     int option;
     while ((option = getopt(argc, argv, "s:x:r:g:v:p:")) != -1)
