@@ -115,14 +115,19 @@ int Monitor::insert(RequestType request)
         }
     }
     else if (this->policy == "fair"){
-        float genAverage = static_cast<float>(this->queueGenReq) / static_cast<float>(MONITOR_GEN_CAP);
-        float vipAverage = static_cast<float>(this->queueVipReq) / static_cast<float>(MONITOR_GEN_CAP);
-        float averageDiff = genAverage - vipAverage;
-                        // same as (x/n) - (y/n)
-        float k = 1.96f;                       // or 3.0f
-        float threshold = (static_cast<float>(this->queueGenReq) + static_cast<float>(this->queueVipReq) > 0) ? k * sqrtf(static_cast<float>(this->queueGenReq) + static_cast<float>(this->queueVipReq)) / static_cast<float>(MONITOR_GEN_CAP) : 0.0f;
-        bool significant = fabsf(averageDiff) > threshold;
-        if(averageDiff > threshold){
+        const float n = static_cast<float>(MONITOR_GEN_CAP);   // or this->normalCapacity
+        const float vip = static_cast<float>(this->queueVipReq);
+        const float gen = static_cast<float>(this->queueGenReq - this->queueVipReq); // non-VIP
+
+        const float pg = gen / n;
+        const float pv = vip / n;
+        const float diff = pg - pv;
+
+        const float z = 1.96f; // 95%
+        const float var = (pg + pv - diff * diff) / n;         // multinomial covariance handled
+        const float se = (var > 0.0f) ? std::sqrt(var) : 0.0f;
+        const float threshold = z * se;
+        if(diff> threshold){
             if(request == VIPRoom){
                 insReqObj = {1,request};
             }
@@ -130,7 +135,7 @@ int Monitor::insert(RequestType request)
                 insReqObj = {2,request};
             }
         }
-        else if (averageDiff < -threshold){
+        else if (diff < -threshold){
             if(request == VIPRoom){
                 insReqObj = {2,request};
             }
@@ -139,12 +144,7 @@ int Monitor::insert(RequestType request)
             }
         }
         else{
-            if(request == VIPRoom){
-                insReqObj = {1,request};
-            }
-            else{
-                insReqObj = {1,request};
-            }
+            insReqObj = {1,request};
         }
     }
     this->buffer.push(insReqObj); // push to our buffer since we have done all the checks needed for the conditions and capcity
