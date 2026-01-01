@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     // We instantiate our monitor object to pass to our threads to handle the producer consumer mechanism
     //  our monitor needs the max amount of requests that can be produced as as seating request and
     // the semaphore barrier for last consumer to signal
-    Monitor *monitor = new Monitor(seatingReq, &semBarrier); // instantiate our monitor
+    Monitor *monitor = new Monitor(seatingReq, &semBarrier, policy); // instantiate our monitor
     // We instantiate our arguments structures for our static functions in our producer and consumer class files
     // we need this in order to pass arguments and start our posix threads with the given functions
     // We use pointers for our argument objects our monitor pointer and our producer pointers with the needed attributes

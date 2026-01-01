@@ -1,6 +1,8 @@
 // Name: Carlos Reyes REDID: 131068259
+#include<cmath>
 #include "monitor.h"
 #include "log.h"
+
 Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacity, int vipCapacity)
 {
     /*
@@ -112,7 +114,37 @@ int Monitor::insert(RequestType request)
         }
     }
     else if (this->policy == "fair"){
-
+        float genAverage = static_cast<float>(this->queueGenReq) / static_cast<float>(MONITOR_GEN_CAP);
+        float vipAverage = static_cast<float>(this->queueVipReq) / static_cast<float>(MONITOR_GEN_CAP);
+        float averageDiff = genAverage - vipAverage;
+                        // same as (x/n) - (y/n)
+        float k = 1.96f;                       // or 3.0f
+        float threshold = (static_cast<float>(this->queueGenReq) + static_cast<float>(this->queueVipReq) > 0) ? k * sqrtf(static_cast<float>(this->queueGenReq) + static_cast<float>(this->queueVipReq)) / static_cast<float>(MONITOR_GEN_CAP) : 0.0f;
+        bool significant = fabsf(averageDiff) > threshold;
+        if(averageDiff > threshold){
+            if(request == VIPRoom){
+                insReqObj = {2,request};
+            }
+            else{
+                insReqObj = {1,request};
+            }
+        }
+        else if (averageDiff < -threshold){
+            if(request == VIPRoom){
+                insReqObj = {1,request};
+            }
+            else{
+                insReqObj = {2,request};
+            }
+        }
+        else{
+            if(request == VIPRoom){
+                insReqObj = {1,request};
+            }
+            else{
+                insReqObj = {1,request};
+            }
+        }
     }
     this->buffer.push(insReqObj); // push to our buffer since we have done all the checks needed for the conditions and capcity
     // Update our values for logging and the amount of requests in the queue
@@ -167,7 +199,7 @@ int Monitor::remove(Consumers robot)
         }
         pthread_cond_wait(&unconsumedSeats, &this->mutex); // We wait for more seats to be produced by our producer threads
     }
-    request = this->buffer.front();           // Get the request from the front of our queue and store
+    request = (this->buffer.top()).request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
