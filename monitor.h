@@ -48,6 +48,8 @@ private:
     bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
     bool unlockedBarrier;                           // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled  
     string policy; 
+    time_t startTime;
+    time_t endTime;
     int fifoPriority;                                                                 
     void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor for each thread of consumer and producer
     struct RequestObj{

@@ -21,6 +21,7 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
     this->unlockedBarrier = false;                   // Instantiate our boolean to check if our semaphore barrier has been unlocked by the last thread
     this->policy = policy;
     this->fifoPriority = 0; 
+    time(&this->startTime);
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
     pthread_cond_init(&this->unconsumedSeats, NULL); // Instantiate our condition to signal that there are unconsumed seats on buffer or wait on seats by consumers
     pthread_cond_init(&this->VipSeatsAvail, NULL);   // We instantiate our condition to signal that there are vip seats available to fill
@@ -102,8 +103,10 @@ int Monitor::insert(RequestType request)
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
     RequestObj insReqObj;
+    time(&insReqObj.created_at);
     if(this->policy == "fifo"){
-        insReqObj = {this->fifoPriority,request};
+        insReqObj.priority = this->fifoPriority;
+        insReqObj.request = request;
         this->fifoPriority += 1;
     }
     else if(this->policy == "vip_priority"){
@@ -200,8 +203,10 @@ int Monitor::remove(Consumers robot)
         }
         pthread_cond_wait(&unconsumedSeats, &this->mutex); // We wait for more seats to be produced by our producer threads
     }
-    request = (this->buffer.top()).request;           // Get the request from the front of our queue and store
+    RequestObj remReqObj = this->buffer.top();
+    request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
+    time(&remReqObj.dequeued_at);
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
     this->consByRobType[robot][request] += 1; // Update the amount of request array of the current consumer/robot has consumed per type of request
