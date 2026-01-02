@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.ejs": "html",
-        "thread": "cpp"
+        "thread": "cpp",
+        "string": "cpp"
     }
 }

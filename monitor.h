@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <queue>
+#include <ctime>
 #include <string>
 #include "seating.h"
 #define MONITOR_GEN_CAP 20 // We define our buffer capacity here
@@ -52,6 +53,9 @@ private:
     struct RequestObj{
         int priority;
         RequestType request;
+        time_t created_at;
+        time_t dequeued_at;
+        time_t completed_at;
         bool operator<(const RequestObj& other) const {
         return priority < other.priority; // Highest priority value comes first
     }
