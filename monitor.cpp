@@ -22,6 +22,7 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
     this->policy = policy;
     this->fifoPriority = 0; 
     time(&this->startTime);
+    this->totalWait = 0;
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
     pthread_cond_init(&this->unconsumedSeats, NULL); // Instantiate our condition to signal that there are unconsumed seats on buffer or wait on seats by consumers
     pthread_cond_init(&this->VipSeatsAvail, NULL);   // We instantiate our condition to signal that there are vip seats available to fill
@@ -33,12 +34,15 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
         this->prodByType[i] = 0; // Instantiate for the request types that have been produced so far
         this->consByType[i] = 0; // Instantiate for the request types that have been consumed so far
         this->queueTypes[i] = 0; // Instantiate for the amount of types of requests that are in the queue
+        this->maxWaitByType[i] = 0;
+        this->waitByType[i] = 0;
     }
     for (int j = 0; j < ConsumerTypeN; j++)
     {
         // This for loop instantiates our array on the bases on consumer type robot
         this->consByRob[j] = 0;                                    // How many requests has each robot consumed
         this->consByRobType[j] = new unsigned int[RequestTypeN](); // How many requests has each robot consumed per type. This is an array of pointers that are instantiated to zero. Used for logging
+        this->waitByRob[j] = 0 ;
     }
 }
 
@@ -210,6 +214,12 @@ int Monitor::remove(Consumers robot)
     remReqObj.waitTime = difftime(remReqObj.dequeuedAt,remReqObj.createdAt);
     remReqObj.serviceTime = difftime(remReqObj.completedAt,remReqObj.dequeuedAt);
     remReqObj.totalTime = difftime(remReqObj.completedAt,remReqObj.createdAt);
+    this->waitByType[request] += remReqObj.waitTime;
+    this->waitByRob[robot] += remReqObj.waitTime;
+    double currRobMax = this->maxWaitByType[robot];
+    if(currRobMax<remReqObj.waitTime){
+        this->maxWaitByType[robot] = remReqObj.waitTime;
+    }
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
     this->consByRobType[robot][request] += 1; // Update the amount of request array of the current consumer/robot has consumed per type of request
