@@ -103,7 +103,7 @@ int Monitor::insert(RequestType request)
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
     RequestObj insReqObj;
-    time(&insReqObj.created_at);
+    time(&insReqObj.createdAt);
     if(this->policy == "fifo"){
         insReqObj.priority = this->fifoPriority;
         insReqObj.request = request;
@@ -206,7 +206,10 @@ int Monitor::remove(Consumers robot)
     RequestObj remReqObj = this->buffer.top();
     request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
-    time(&remReqObj.dequeued_at);
+    time(&remReqObj.dequeuedAt);
+    remReqObj.waitTime = difftime(remReqObj.dequeuedAt,remReqObj.createdAt);
+    remReqObj.serviceTime = difftime(remReqObj.completedAt,remReqObj.dequeuedAt);
+    remReqObj.totalTime = difftime(remReqObj.completedAt,remReqObj.createdAt);
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
     this->consByRobType[robot][request] += 1; // Update the amount of request array of the current consumer/robot has consumed per type of request
