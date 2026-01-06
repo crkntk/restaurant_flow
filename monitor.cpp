@@ -21,6 +21,8 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
     this->unlockedBarrier = false;                   // Instantiate our boolean to check if our semaphore barrier has been unlocked by the last thread
     this->policy = policy;
     this->fifoPriority = 0; 
+    time(&this->startTime);
+    this->totalWait = 0;
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
     pthread_cond_init(&this->unconsumedSeats, NULL); // Instantiate our condition to signal that there are unconsumed seats on buffer or wait on seats by consumers
     pthread_cond_init(&this->VipSeatsAvail, NULL);   // We instantiate our condition to signal that there are vip seats available to fill
@@ -32,12 +34,15 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
         this->prodByType[i] = 0; // Instantiate for the request types that have been produced so far
         this->consByType[i] = 0; // Instantiate for the request types that have been consumed so far
         this->queueTypes[i] = 0; // Instantiate for the amount of types of requests that are in the queue
+        this->maxWaitByType[i] = 0;
+        this->waitByType[i] = 0;
     }
     for (int j = 0; j < ConsumerTypeN; j++)
     {
         // This for loop instantiates our array on the bases on consumer type robot
         this->consByRob[j] = 0;                                    // How many requests has each robot consumed
         this->consByRobType[j] = new unsigned int[RequestTypeN](); // How many requests has each robot consumed per type. This is an array of pointers that are instantiated to zero. Used for logging
+        this->waitByRob[j] = 0 ;
     }
 }
 
@@ -102,8 +107,10 @@ int Monitor::insert(RequestType request)
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
     RequestObj insReqObj;
+    time(&insReqObj.createdAt);
     if(this->policy == "fifo"){
-        insReqObj = {this->fifoPriority,request};
+        insReqObj.priority = this->fifoPriority;
+        insReqObj.request = request;
         this->fifoPriority += 1;
     }
     else if(this->policy == "vip_priority"){
@@ -200,8 +207,19 @@ int Monitor::remove(Consumers robot)
         }
         pthread_cond_wait(&unconsumedSeats, &this->mutex); // We wait for more seats to be produced by our producer threads
     }
-    request = (this->buffer.top()).request;           // Get the request from the front of our queue and store
+    RequestObj remReqObj = this->buffer.top();
+    request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
+    time(&remReqObj.dequeuedAt);
+    remReqObj.waitTime = difftime(remReqObj.dequeuedAt,remReqObj.createdAt);
+    remReqObj.serviceTime = difftime(remReqObj.completedAt,remReqObj.dequeuedAt);
+    remReqObj.totalTime = difftime(remReqObj.completedAt,remReqObj.createdAt);
+    this->waitByType[request] += remReqObj.waitTime;
+    this->waitByRob[robot] += remReqObj.waitTime;
+    double currRobMax = this->maxWaitByType[robot];
+    if(currRobMax<remReqObj.waitTime){
+        this->maxWaitByType[robot] = remReqObj.waitTime;
+    }
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
     this->consByRobType[robot][request] += 1; // Update the amount of request array of the current consumer/robot has consumed per type of request
@@ -220,9 +238,28 @@ int Monitor::remove(Consumers robot)
         // This branch is for our last consumer that removed the last request in the queue and there are
         // no more requests being produced and its the first time we hit this branch
         // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
-        unlockedBarrier = true;                                                            // set our boolean for posting once to the semaphore barrier to true
+        unlockedBarrier = true;
+        time(&this->endTime);
+        double simTotalTime =  difftime(this->endTime,this->startTime);                                                           // set our boolean for posting once to the semaphore barrier to true
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of request by type
+        map<RequestType,map<string,double>> reqInfoMap;
+        for(int i = 0; i < RequestTypeN; i++){
+            double avgWait = this->waitByType[i]/this->consByType[i];
+            RequestType typeCasted = static_cast<RequestType>(i);
+            reqInfoMap[typeCasted]["Avg Wait"] = avgWait; 
+            reqInfoMap[typeCasted]["Max Wait"] = this->maxWaitByType[i]; 
+            reqInfoMap[typeCasted]["Total Served"] = this->consByType[i];
+        }
+        map<ConsumerType,map<string,double>> consInfoMap;
+        for(int i = 0; i < ConsumerTypeN; i++){
+            double avgWait = this->waitByRob[i]/this->consByRob[i];
+            ConsumerType typeCasted = static_cast<ConsumerType>(i);
+            consInfoMap[typeCasted]["Avg Wait"] = avgWait; 
+            consInfoMap[typeCasted]["Throughput"] = this->consByRob[i] / simTotalTime; 
+            consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];
+        }
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
+        output_consumed_table(reqInfoMap,consInfoMap);
         sem_post(this->barrierSem);                                                        // We post to our semaphore so that our main thread can continue and kill off the threads still running
     }
     else

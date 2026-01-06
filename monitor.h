@@ -2,6 +2,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <queue>
+#include <ctime>
+#include <map>
 #include <string>
 #include "seating.h"
 #define MONITOR_GEN_CAP 20 // We define our buffer capacity here
@@ -38,6 +40,10 @@ private:
     unsigned int consByRob[ConsumerTypeN];                    // This array is to keep track of how many requests each type/name of robot have consumed
     unsigned int queueTypes[RequestTypeN];                    // This array keeps track of how many of each type are in the queue
     unsigned int *consByRobType[ConsumerTypeN];               // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
+    double waitByType[RequestTypeN];
+    double maxWaitByType[RequestTypeN];
+    double waitByRob[ConsumerTypeN];        
+    double totalWait;
     int maxProdRequests;                                      // This is the max amount of requests that can be produced by producers of any kind
     int normalCapacity;                                       // This is the normal capacity in our buffer
     int VIPCapacity;                                          // This is the vip capacity within our queue capacity. This is not separate from the general capacity it is an amount within the normal queue capacity
@@ -47,11 +53,19 @@ private:
     bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
     bool unlockedBarrier;                           // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled  
     string policy; 
-    int fifoPriority;                                                                 
+    time_t startTime;
+    time_t endTime;
+    int fifoPriority;                                                          
     void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor for each thread of consumer and producer
     struct RequestObj{
         int priority;
         RequestType request;
+        time_t createdAt;
+        time_t dequeuedAt;
+        time_t completedAt;
+        double waitTime;
+        double serviceTime;
+        double totalTime;
         bool operator<(const RequestObj& other) const {
         return priority < other.priority; // Highest priority value comes first
     }
