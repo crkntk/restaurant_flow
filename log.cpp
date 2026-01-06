@@ -257,3 +257,7 @@ void output_production_history(unsigned int produced[],
 
   printf("Elapsed time %.3f s\n", elapsed_s());
 }
+
+void output_consumed_table(map<RequestType,map<string, double>> requestInfoMap, map<ConsumerType,map<string, double>> consInfoMap){
+  
+}

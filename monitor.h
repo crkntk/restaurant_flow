@@ -42,7 +42,7 @@ private:
     unsigned int *consByRobType[ConsumerTypeN];               // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
     double waitByType[RequestTypeN];
     double maxWaitByType[RequestTypeN];
-    double waitByRob[ConsumerTypeN];
+    double waitByRob[ConsumerTypeN];        
     double totalWait;
     int maxProdRequests;                                      // This is the max amount of requests that can be produced by producers of any kind
     int normalCapacity;                                       // This is the normal capacity in our buffer

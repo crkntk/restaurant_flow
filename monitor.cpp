@@ -238,9 +238,28 @@ int Monitor::remove(Consumers robot)
         // This branch is for our last consumer that removed the last request in the queue and there are
         // no more requests being produced and its the first time we hit this branch
         // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
-        unlockedBarrier = true;                                                            // set our boolean for posting once to the semaphore barrier to true
+        unlockedBarrier = true;
+        time(&this->endTime);
+        double simTotalTime =  difftime(this->endTime,this->startTime);                                                           // set our boolean for posting once to the semaphore barrier to true
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of request by type
+        map<RequestType,map<string,double>> reqInfoMap;
+        for(int i = 0; i < RequestTypeN; i++){
+            double avgWait = this->waitByType[i]/this->consByType[i];
+            RequestType typeCasted = static_cast<RequestType>(i);
+            reqInfoMap[typeCasted]["Avg Wait"] = avgWait; 
+            reqInfoMap[typeCasted]["Max Wait"] = this->maxWaitByType[i]; 
+            reqInfoMap[typeCasted]["Total Served"] = this->consByType[i];
+        }
+        map<ConsumerType,map<string,double>> consInfoMap;
+        for(int i = 0; i < ConsumerTypeN; i++){
+            double avgWait = this->waitByRob[i]/this->consByRob[i];
+            ConsumerType typeCasted = static_cast<ConsumerType>(i);
+            consInfoMap[typeCasted]["Avg Wait"] = avgWait; 
+            consInfoMap[typeCasted]["Throughput"] = this->consByRob[i] / simTotalTime; 
+            consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];
+        }
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
+        output_consumed_table(reqInfoMap,consInfoMap);
         sem_post(this->barrierSem);                                                        // We post to our semaphore so that our main thread can continue and kill off the threads still running
     }
     else
