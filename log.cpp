@@ -1,5 +1,7 @@
 // Name: Carlos Reyes REDID: 131068259
 #include <stdio.h>
+#include <iostream>
+#include <iomanip>
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -259,5 +261,25 @@ void output_production_history(unsigned int produced[],
 }
 
 void output_consumed_table(map<RequestType,map<string, double>> requestInfoMap, map<ConsumerType,map<string, double>> consInfoMap){
-  
+    string perTypeHeaders[] = {"Type", "Avg Wait", "Max Wait", "Total Served"};
+    string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait", "Throughput"};
+    int tableColumnWidth = 10;
+    cout << "BY TYPE METRICS" << endl;
+    cout << left << setw(tableColumnWidth) << perTypeHeaders[0]
+      << left << setw(tableColumnWidth) << perTypeHeaders[1]
+      << left << setw(tableColumnWidth) << perTypeHeaders[2]
+      << left << setw(tableColumnWidth) << perTypeHeaders[3] << endl;
+    for(int i = 0; i<RequestTypeN;i++){
+      RequestType typeCasted = static_cast<RequestType>(i);
+      cout << left << setw(tableColumnWidth) << producerNames[i]
+      << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Avg Wait"]
+      << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Max Wait"]
+      << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Total Served"] << endl;
+    }
+
+    cout << "BY TYPE CONSUMER" << endl;
+    cout << left << setw(tableColumnWidth) << perConsHeaders[0]
+      << left << setw(tableColumnWidth) << perConsHeaders[1]
+      << left << setw(tableColumnWidth) << perConsHeaders[2]
+      << left << setw(tableColumnWidth) << perConsHeaders[3] << endl;
 }
