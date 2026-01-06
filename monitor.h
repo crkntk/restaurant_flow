@@ -5,11 +5,15 @@
 #include <ctime>
 #include <map>
 #include <string>
+#include <chrono>
 #include "seating.h"
 #define MONITOR_GEN_CAP 20 // We define our buffer capacity here
 #define MONITOR_VIP_CAP 6  // We define our Vip room capacity here
 #ifndef MONITOR_H
 #define MONITOR_H
+
+
+using namespace chrono;
 using namespace std;
 /*
 This is the monitor class that handles all the requests to remove and insert to the buffer
@@ -53,16 +57,16 @@ private:
     bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
     bool unlockedBarrier;                           // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled  
     string policy; 
-    time_t startTime;
-    time_t endTime;
+    chrono::steady_clock::time_point startTime;
+    chrono::steady_clock::time_point endTime;
     int fifoPriority;                                                          
     void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor for each thread of consumer and producer
     struct RequestObj{
         int priority;
         RequestType request;
-        time_t createdAt;
-        time_t dequeuedAt;
-        time_t completedAt;
+        chrono::steady_clock::time_point createdAt;
+        chrono::steady_clock::time_point dequeuedAt;
+        chrono::steady_clock::time_point completedAt;
         double waitTime;
         double serviceTime;
         double totalTime;

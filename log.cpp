@@ -5,8 +5,9 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
-
+#include <string>
 #include "log.h"
+
 
 /*
  * i/o functions - assumed to be called in a critical section
@@ -258,12 +259,13 @@ void output_production_history(unsigned int produced[],
   }
 
   printf("Elapsed time %.3f s\n", elapsed_s());
-}
+};
 
-void output_consumed_table(map<RequestType,map<string, double>> requestInfoMap, map<ConsumerType,map<string, double>> consInfoMap){
+void output_consumed_table(map<RequestType,map<string, double> > requestInfoMap, map<ConsumerType,map<string, double> > consInfoMap){
     string perTypeHeaders[] = {"Type", "Avg Wait", "Max Wait", "Total Served"};
     string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait", "Throughput"};
-    int tableColumnWidth = 10;
+    int tableColumnWidth = 40;
+    cout << "\n\n\n\n" << endl;
     cout << "BY TYPE METRICS" << endl;
     cout << left << setw(tableColumnWidth) << perTypeHeaders[0]
       << left << setw(tableColumnWidth) << perTypeHeaders[1]
@@ -276,10 +278,18 @@ void output_consumed_table(map<RequestType,map<string, double>> requestInfoMap, 
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Max Wait"]
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Total Served"] << endl;
     }
-
+    cout << "\n\n\n" << endl;
     cout << "BY TYPE CONSUMER" << endl;
     cout << left << setw(tableColumnWidth) << perConsHeaders[0]
       << left << setw(tableColumnWidth) << perConsHeaders[1]
       << left << setw(tableColumnWidth) << perConsHeaders[2]
       << left << setw(tableColumnWidth) << perConsHeaders[3] << endl;
-}
+    for(int i = 0; i<ConsumerTypeN;i++){
+      ConsumerType typeCasted = static_cast<ConsumerType>(i);
+      cout << left << setw(tableColumnWidth) << consumerNames[i]
+      << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Total Requests"]
+      << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Avg Wait"]
+      << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Throughput"] << endl;
+    }
+    return;
+};

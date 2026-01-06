@@ -4,10 +4,12 @@
 
 #include <map>
 #include <queue>
-#include<string>
+#include <string>
 #include "seating.h"
 
-
+#ifdef __cplusplus
+using namespace std;
+#endif
 /**
  * @brief Show that a request has been added to the request queue and
  *        print the current status of the request queue.
@@ -57,5 +59,5 @@ void output_request_removed(Consumers consumers, RequestType type,
  */
 void output_production_history(unsigned int produced[], unsigned int *consumed[]);
 
-void output_consumed_table(map<RequestType,map<string, double>> requestInfoMap, map<ConsumerType,map<string, double>> consInfoMap);
+void output_consumed_table(map<RequestType, map<string, double> > requestInfoMap, map<ConsumerType, map<string, double> > consInfoMap);
 #endif

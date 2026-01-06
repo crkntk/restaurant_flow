@@ -21,7 +21,7 @@ Monitor::Monitor(int maxProdReq, sem_t *barrierSem,string policy, int genCapacit
     this->unlockedBarrier = false;                   // Instantiate our boolean to check if our semaphore barrier has been unlocked by the last thread
     this->policy = policy;
     this->fifoPriority = 0; 
-    time(&this->startTime);
+    this->startTime = chrono::steady_clock::now();
     this->totalWait = 0;
     pthread_cond_init(&this->seatsAvail, NULL);      // Instantiate our condition for seats are available to fill or wait
     pthread_cond_init(&this->unconsumedSeats, NULL); // Instantiate our condition to signal that there are unconsumed seats on buffer or wait on seats by consumers
@@ -107,7 +107,7 @@ int Monitor::insert(RequestType request)
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
     RequestObj insReqObj;
-    time(&insReqObj.createdAt);
+    insReqObj.createdAt = chrono::steady_clock::now();
     if(this->policy == "fifo"){
         insReqObj.priority = this->fifoPriority;
         insReqObj.request = request;
@@ -115,10 +115,12 @@ int Monitor::insert(RequestType request)
     }
     else if(this->policy == "vip_priority"){
         if(request == VIPRoom){
-            insReqObj = {1,request};
+            insReqObj.priority = 1;
+            insReqObj.request = request;
         }
         else{
-            insReqObj = {2,request};
+            insReqObj.priority = 2;
+            insReqObj.request = request;
         }
     }
     else if (this->policy == "fair"){
@@ -136,22 +138,27 @@ int Monitor::insert(RequestType request)
         const float threshold = z * se;
         if(diff> threshold){
             if(request == VIPRoom){
-                insReqObj = {1,request};
+                insReqObj.priority = 1;
+                insReqObj.request = request;
             }
             else{
-                insReqObj = {2,request};
+                insReqObj.priority = 2;
+                insReqObj.request = request;
             }
         }
         else if (diff < -threshold){
             if(request == VIPRoom){
-                insReqObj = {2,request};
+                insReqObj.priority = 2;
+                insReqObj.request = request;
             }
             else{
-                insReqObj = {1,request};
+                insReqObj.priority = 1;
+                insReqObj.request = request;
             }
         }
         else{
-            insReqObj = {1,request};
+            insReqObj.priority = 1;
+            insReqObj.request = request;
         }
     }
     this->buffer.push(insReqObj); // push to our buffer since we have done all the checks needed for the conditions and capcity
@@ -211,14 +218,15 @@ int Monitor::remove(Consumers robot)
     request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
     time(&remReqObj.dequeuedAt);
+    remReqObj.dequeuedAt = chrono::steady_clock::now();
     remReqObj.waitTime = difftime(remReqObj.dequeuedAt,remReqObj.createdAt);
     remReqObj.serviceTime = difftime(remReqObj.completedAt,remReqObj.dequeuedAt);
     remReqObj.totalTime = difftime(remReqObj.completedAt,remReqObj.createdAt);
     this->waitByType[request] += remReqObj.waitTime;
     this->waitByRob[robot] += remReqObj.waitTime;
-    double currRobMax = this->maxWaitByType[robot];
+    double currRobMax = this->maxWaitByType[request];
     if(currRobMax<remReqObj.waitTime){
-        this->maxWaitByType[robot] = remReqObj.waitTime;
+        this->maxWaitByType[request] = remReqObj.waitTime;
     }
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
@@ -240,7 +248,7 @@ int Monitor::remove(Consumers robot)
         // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
         unlockedBarrier = true;
         time(&this->endTime);
-        double simTotalTime =  difftime(this->endTime,this->startTime);                                                           // set our boolean for posting once to the semaphore barrier to true
+        double simTotalTime = difftime(this->endTime,this->startTime);                                                           // set our boolean for posting once to the semaphore barrier to true
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of request by type
         map<RequestType,map<string,double>> reqInfoMap;
         for(int i = 0; i < RequestTypeN; i++){
@@ -255,7 +263,7 @@ int Monitor::remove(Consumers robot)
             double avgWait = this->waitByRob[i]/this->consByRob[i];
             ConsumerType typeCasted = static_cast<ConsumerType>(i);
             consInfoMap[typeCasted]["Avg Wait"] = avgWait; 
-            consInfoMap[typeCasted]["Throughput"] = this->consByRob[i] / simTotalTime; 
+            consInfoMap[typeCasted]["Throughput"] = (double)this->consByRob[i] /  (double)simTotalTime; 
             consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];
         }
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
