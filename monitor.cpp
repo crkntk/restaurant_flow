@@ -107,21 +107,26 @@ int Monitor::insert(RequestType request)
         pthread_mutex_unlock(&mutex);                                 // unlock our mutex leaving critical section
         return 0;                                                     // return zero since we were waiting and not request was inserted and we hit the max requests
     }
-    RequestObj insReqObj;
-    insReqObj.createdAt = chrono::steady_clock::now();
+    RequestObj insReqObj;       //Declare the object to be inserted into our queue with its parameters
+    insReqObj.createdAt = chrono::steady_clock::now(); //Set the created at time for the current request
     if(this->policy == "fifo"){
-        insReqObj.priority = this->fifoPriority;
-        insReqObj.request = request;
-        this->fifoPriority += 1;
+        //This branch is for when our policy is first in first out. The priority of the last added will be the fifo priority parameter
+        //since we are using a priority queue
+        insReqObj.priority = this->fifoPriority;    //Set the current object request priority to the monitor fifo priority
+        insReqObj.request = request;                //Set the objects request parameter
+        this->fifoPriority += 1;                    //Increase priority variable for monitor for the next request since its first in first out
     }
     else if(this->policy == "vip_priority"){
+        //If the policy is vip priority priority is given to vip requests
         if(request == VIPRoom){
-            insReqObj.priority = 1;
-            insReqObj.request = request;
+            //Branch if our request was a priority request we set to 2 for higher value priority
+            insReqObj.priority = 2;
+            insReqObj.request = request;    //Set the request parameter in the object
         }
         else{
-            insReqObj.priority = 2;
-            insReqObj.request = request;
+            //If our request is a general request we want lower priority for this policy
+            insReqObj.priority = 1; //priority set to 1
+            insReqObj.request = request; //request set in request object
         }
     }
     else if (this->policy == "fair"){
@@ -249,26 +254,28 @@ int Monitor::remove(Consumers robot)
         // This branch is for our last consumer that removed the last request in the queue and there are
         // no more requests being produced and its the first time we hit this branch
         // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
-        unlockedBarrier = true;
-        this->endTime = chrono::steady_clock::now();
-        chrono::steady_clock::duration elapsed_time = this->endTime - this->startTime;
-        double simTotalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();                                                           // set our boolean for posting once to the semaphore barrier to true
+        unlockedBarrier = true;             // set our boolean for posting once to the semaphore barrier to true
+        this->endTime = chrono::steady_clock::now(); //Get our ending time for our simultion
+        chrono::steady_clock::duration elapsed_time = this->endTime - this->startTime;          //Gets the difference of our starting to end for elapsed time
+        double simTotalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();           //get the time in milliseconds as a number not an object                                                       
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of request by type
-        map<RequestType,map<string,double>> reqInfoMap;
+        map<RequestType,map<string,double>> reqInfoMap;                //Instantiate map of logging info for request type
         for(int i = 0; i < RequestTypeN; i++){
-            double avgWait = this->waitByType[i]/this->consByType[i];
-            RequestType typeCasted = static_cast<RequestType>(i);
-            reqInfoMap[typeCasted]["Avg Wait"] = avgWait; 
-            reqInfoMap[typeCasted]["Max Wait"] = this->maxWaitByType[i]; 
-            reqInfoMap[typeCasted]["Total Served"] = this->consByType[i];
+            //This loop iterates through all the request types to set their time metrics for logging purposes
+            double avgWait = this->waitByType[i]/this->consByType[i];       //Calculated average wait time for the current request type
+            RequestType typeCasted = static_cast<RequestType>(i);           //Cast request type iterated integer to request type give by our enumarator in log.h file
+            reqInfoMap[typeCasted]["Avg Wait"] = avgWait;                   //Set average wait for the current request type
+            reqInfoMap[typeCasted]["Max Wait"] = this->maxWaitByType[i];    //Set maximum wait seen for the current request type
+            reqInfoMap[typeCasted]["Total Served"] = this->consByType[i];   //Set the total amount of request served for the request type
         }
-        map<ConsumerType,map<string,double>> consInfoMap;
+        map<ConsumerType,map<string,double>> consInfoMap;   //Instaniate map of map for the consumer information to log into our table names for metrics in map must match headers in table
         for(int i = 0; i < ConsumerTypeN; i++){
-            double avgWait = this->waitByRob[i]/this->consByRob[i];
-            ConsumerType typeCasted = static_cast<ConsumerType>(i);
-            consInfoMap[typeCasted]["Avg Wait"] = avgWait; 
-            consInfoMap[typeCasted]["Throughput"] = (double)this->consByRob[i] / ((double)simTotalTime / 1000); 
-            consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];
+            //This for loop iterates through al consumer types to set the time metrics of the simulation for the consumers in our table
+            double avgWait = this->waitByRob[i]/this->consByRob[i];     //Set the average wait for the consumer type
+            ConsumerType typeCasted = static_cast<ConsumerType>(i);     //type cast the number in the current iteration
+            consInfoMap[typeCasted]["Avg Wait"] = avgWait;              //Set average wait for current consumer
+            consInfoMap[typeCasted]["Throughput"] = (double)this->consByRob[i] / ((double)simTotalTime / 1000);     //set throughput in requests per second for current consumer. Simulation time is converted to seconds since it was in milliseconds
+            consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];                                        //Set the total amount of requests for the current consumer type
         }
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
         output_consumed_table(reqInfoMap,consInfoMap);

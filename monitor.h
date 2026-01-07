@@ -44,10 +44,10 @@ private:
     unsigned int consByRob[ConsumerTypeN];                    // This array is to keep track of how many requests each type/name of robot have consumed
     unsigned int queueTypes[RequestTypeN];                    // This array keeps track of how many of each type are in the queue
     unsigned int *consByRobType[ConsumerTypeN];               // This is a 2D array the first level is the robot/consumer type and the second level is how many request has that robot/consumer consumed by type
-    double waitByType[RequestTypeN];
-    double maxWaitByType[RequestTypeN];
-    double waitByRob[ConsumerTypeN];        
-    double totalWait;
+    double waitByType[RequestTypeN];                          // Instantiate array for total wait type per request type
+    double maxWaitByType[RequestTypeN];                       // Instantiate array for the max wait time seen so far per request type
+    double waitByRob[ConsumerTypeN];                          // Instantiate array for total wait time per consumer type
+    double totalWait;                                          // Total wait time for the current simulation
     int maxProdRequests;                                      // This is the max amount of requests that can be produced by producers of any kind
     int normalCapacity;                                       // This is the normal capacity in our buffer
     int VIPCapacity;                                          // This is the vip capacity within our queue capacity. This is not separate from the general capacity it is an amount within the normal queue capacity
@@ -57,20 +57,23 @@ private:
     bool maxReqHit;                                           // The maximum amount of requests producers can produce and insert in the queue overall
     bool unlockedBarrier;                           // This boolean is to signal that the semaphore barrier has been unlocked that way no more consumers can signal the semaphore after the last consumer has signaled  
     string policy; 
-    chrono::steady_clock::time_point startTime;
-    chrono::steady_clock::time_point endTime;
-    int fifoPriority;                                                          
+    chrono::steady_clock::time_point startTime;     //Start time of the simulation
+    chrono::steady_clock::time_point endTime;       //End time of the simulation
+    int fifoPriority;                               //Fifo integer for pioroty first in first out. Increases everytime we add a request to give priority to the highest number                                            
     void signal_all_cond(int numConsumers, int numProducers); // This function signals all the conditions currently in our monitor for each thread of consumer and producer
+    //This struct is for requests and keeps track of time metrics like created time dequeued when removed and completion time when it is done after removed. It also
+    //keeps tracks of metrics for logging like waitTime and toatl time and service time. It keeps track of priority for the buffer priority queue
     struct RequestObj{
-        int priority;
-        RequestType request;
-        chrono::steady_clock::time_point createdAt;
-        chrono::steady_clock::time_point dequeuedAt;
-        chrono::steady_clock::time_point completedAt;
-        double waitTime;
-        double serviceTime;
-        double totalTime;
+        int priority;   //Priority of the request
+        RequestType request;      //Request 
+        chrono::steady_clock::time_point createdAt;     //Time request was created
+        chrono::steady_clock::time_point dequeuedAt;    //Time request was removed from buffer
+        chrono::steady_clock::time_point completedAt;   //Time the request completed at
+        double waitTime;                //Time request has waited in buffer
+        double serviceTime;             //Time spend after 
+        double totalTime;               //Total time it took for this request to be fulfilled to the end
         bool operator<(const RequestObj& other) const {
+            //Priority comparator for our priority queue 
         return priority < other.priority; // Highest priority value comes first
     }
     };
