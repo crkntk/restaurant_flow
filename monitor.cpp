@@ -217,11 +217,13 @@ int Monitor::remove(Consumers robot)
     RequestObj remReqObj = this->buffer.top();
     request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
-    time(&remReqObj.dequeuedAt);
     remReqObj.dequeuedAt = chrono::steady_clock::now();
-    remReqObj.waitTime = difftime(remReqObj.dequeuedAt,remReqObj.createdAt);
-    remReqObj.serviceTime = difftime(remReqObj.completedAt,remReqObj.dequeuedAt);
-    remReqObj.totalTime = difftime(remReqObj.completedAt,remReqObj.createdAt);
+    chrono::steady_clock::duration elapsed_time = remReqObj.dequeuedAt - remReqObj.createdAt;
+    remReqObj.waitTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
+    elapsed_time = remReqObj.completedAt - remReqObj.dequeuedAt;
+    remReqObj.serviceTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
+    elapsed_time = remReqObj.completedAt - remReqObj.createdAt;
+    remReqObj.totalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
     this->waitByType[request] += remReqObj.waitTime;
     this->waitByRob[robot] += remReqObj.waitTime;
     double currRobMax = this->maxWaitByType[request];
@@ -247,8 +249,9 @@ int Monitor::remove(Consumers robot)
         // no more requests being produced and its the first time we hit this branch
         // In order to guard from other threads posting as well we have a flag so that only one semaphore post happens as a safeguard
         unlockedBarrier = true;
-        time(&this->endTime);
-        double simTotalTime = difftime(this->endTime,this->startTime);                                                           // set our boolean for posting once to the semaphore barrier to true
+        this->endTime = chrono::steady_clock::now();
+        chrono::steady_clock::duration elapsed_time = this->endTime - this->startTime;
+        double simTotalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();                                                           // set our boolean for posting once to the semaphore barrier to true
         output_production_history(this->prodByType, (unsigned int **)this->consByRobType); // We log our request history using the array of produced by request type and the 2D array of the robot and its amount of request by type
         map<RequestType,map<string,double>> reqInfoMap;
         for(int i = 0; i < RequestTypeN; i++){

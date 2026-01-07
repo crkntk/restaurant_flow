@@ -5,6 +5,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <cmath>
 #include <string>
 #include "log.h"
 
@@ -262,11 +263,15 @@ void output_production_history(unsigned int produced[],
 };
 
 void output_consumed_table(map<RequestType,map<string, double> > requestInfoMap, map<ConsumerType,map<string, double> > consInfoMap){
-    string perTypeHeaders[] = {"Type", "Avg Wait", "Max Wait", "Total Served"};
-    string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait", "Throughput"};
+    string perTypeHeaders[] = {"Type", "Avg Wait (ms)", "Max Wait (ms)", "Total Served"};
+    string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait (ms)", "Throughput req/sec"};
+    int typeHeadSize = sizeof(perTypeHeaders)/sizeof(perTypeHeaders[0]);
+    int consHeadSize = sizeof(perConsHeaders)/sizeof(perConsHeaders[0]);
     int tableColumnWidth = 40;
     cout << "\n\n\n\n" << endl;
-    cout << "BY TYPE METRICS" << endl;
+    string title = "BY TYPE METRICS";
+    int padding = (tableColumnWidth*typeHeadSize)/2;
+    cout << string(padding - title.size(),' ')  << title << "\n" << endl;
     cout << left << setw(tableColumnWidth) << perTypeHeaders[0]
       << left << setw(tableColumnWidth) << perTypeHeaders[1]
       << left << setw(tableColumnWidth) << perTypeHeaders[2]
@@ -278,8 +283,11 @@ void output_consumed_table(map<RequestType,map<string, double> > requestInfoMap,
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Max Wait"]
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Total Served"] << endl;
     }
+    tableColumnWidth = 40;
     cout << "\n\n\n" << endl;
-    cout << "BY TYPE CONSUMER" << endl;
+    title = "BY CONSUMER METRICS";
+    padding = (tableColumnWidth*consHeadSize)/2;
+    cout << string(padding - title.size(),' ') << title << "\n" << endl;
     cout << left << setw(tableColumnWidth) << perConsHeaders[0]
       << left << setw(tableColumnWidth) << perConsHeaders[1]
       << left << setw(tableColumnWidth) << perConsHeaders[2]
@@ -289,7 +297,7 @@ void output_consumed_table(map<RequestType,map<string, double> > requestInfoMap,
       cout << left << setw(tableColumnWidth) << consumerNames[i]
       << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Total Requests"]
       << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Avg Wait"]
-      << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Throughput"] << endl;
+      << left << setw(tableColumnWidth) << round(consInfoMap[typeCasted]["Throughput"] * 1000) << endl;
     }
     return;
 };
