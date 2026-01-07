@@ -263,41 +263,47 @@ void output_production_history(unsigned int produced[],
 };
 
 void output_consumed_table(map<RequestType,map<string, double> > requestInfoMap, map<ConsumerType,map<string, double> > consInfoMap){
-    string perTypeHeaders[] = {"Type", "Avg Wait (ms)", "Max Wait (ms)", "Total Served"};
-    string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait (ms)", "Throughput req/sec"};
-    int typeHeadSize = sizeof(perTypeHeaders)/sizeof(perTypeHeaders[0]);
-    int consHeadSize = sizeof(perConsHeaders)/sizeof(perConsHeaders[0]);
-    int tableColumnWidth = 40;
-    cout << "\n\n\n\n" << endl;
-    string title = "BY TYPE METRICS";
-    int padding = (tableColumnWidth*typeHeadSize)/2;
-    cout << string(padding - title.size(),' ')  << title << "\n" << endl;
+  /*
+  This functions prints two tables of time metrics by type and by consumer. This takes in a map for the request objects
+  along with its metrics. It takes the time metrics per consumer as well. Our time metrics are in milliseconds
+  */
+    string perTypeHeaders[] = {"Type", "Avg Wait (ms)", "Max Wait (ms)", "Total Served"}; //First table per type metric headers
+    string perConsHeaders[] = {"Consumer", "Total Requests", "Avg Wait (ms)", "Throughput req/sec"};  //Second table per consumer metric headers
+    int typeHeadSize = sizeof(perTypeHeaders)/sizeof(perTypeHeaders[0]); // Number of columns for per type table
+    int consHeadSize = sizeof(perConsHeaders)/sizeof(perConsHeaders[0]); // Number of columns for per consumer table
+    int tableColumnWidth = 40;          //Width of each column
+    cout << "\n\n\n\n" << endl; // Space after outputed history
+    string title = "BY TYPE METRICS";     //Title of first table
+    int padding = (tableColumnWidth*typeHeadSize)/2;      //Padding to center first table
+    cout << string(padding - title.size(),' ')  << title << "\n" << endl; //Output title
     cout << left << setw(tableColumnWidth) << perTypeHeaders[0]
       << left << setw(tableColumnWidth) << perTypeHeaders[1]
       << left << setw(tableColumnWidth) << perTypeHeaders[2]
-      << left << setw(tableColumnWidth) << perTypeHeaders[3] << endl;
+      << left << setw(tableColumnWidth) << perTypeHeaders[3] << endl; // Output first table headers
     for(int i = 0; i<RequestTypeN;i++){
-      RequestType typeCasted = static_cast<RequestType>(i);
+      //This for loop iterates through all the request types and prints its metrics to the table
+      RequestType typeCasted = static_cast<RequestType>(i);     //Cast type for iteration the enumartion corresponds to thise
       cout << left << setw(tableColumnWidth) << producerNames[i]
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Avg Wait"]
       << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Max Wait"]
-      << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Total Served"] << endl;
+      << left << setw(tableColumnWidth) << requestInfoMap[typeCasted]["Total Served"] << endl; //Output the the line metrics for the current request type
     }
-    tableColumnWidth = 40;
-    cout << "\n\n\n" << endl;
-    title = "BY CONSUMER METRICS";
-    padding = (tableColumnWidth*consHeadSize)/2;
-    cout << string(padding - title.size(),' ') << title << "\n" << endl;
+    tableColumnWidth = 40; //Table width for second table columns
+    cout << "\n\n\n" << endl;   //print three empty lines after
+    title = "BY CONSUMER METRICS";    //title for second table
+    padding = (tableColumnWidth*consHeadSize)/2;      //padding for second table
+    cout << string(padding - title.size(),' ') << title << "\n" << endl; //Print out second table title
     cout << left << setw(tableColumnWidth) << perConsHeaders[0]
       << left << setw(tableColumnWidth) << perConsHeaders[1]
       << left << setw(tableColumnWidth) << perConsHeaders[2]
-      << left << setw(tableColumnWidth) << perConsHeaders[3] << endl;
+      << left << setw(tableColumnWidth) << perConsHeaders[3] << endl;   //Print out line for second table headers columns
     for(int i = 0; i<ConsumerTypeN;i++){
-      ConsumerType typeCasted = static_cast<ConsumerType>(i);
+      //This for loop iterates through all consumer types on the enumerator and prints out the metrics
+      ConsumerType typeCasted = static_cast<ConsumerType>(i); //Cast the iteration integer i to consumer type in our enumerator
       cout << left << setw(tableColumnWidth) << consumerNames[i]
       << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Total Requests"]
       << left << setw(tableColumnWidth) << consInfoMap[typeCasted]["Avg Wait"]
-      << left << setw(tableColumnWidth) << round(consInfoMap[typeCasted]["Throughput"] * 1000) << endl;
+      << left << setw(tableColumnWidth) << round(consInfoMap[typeCasted]["Throughput"]) << endl; //Print out the line for the metrics throughput is in seconds so needs to be converted 
     }
     return;
 };

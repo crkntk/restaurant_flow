@@ -1,5 +1,6 @@
 // Name: Carlos Reyes REDID: 131068259
 #include<cmath>
+#include <iostream>
 #include "monitor.h"
 #include "log.h"
 
@@ -266,7 +267,7 @@ int Monitor::remove(Consumers robot)
             double avgWait = this->waitByRob[i]/this->consByRob[i];
             ConsumerType typeCasted = static_cast<ConsumerType>(i);
             consInfoMap[typeCasted]["Avg Wait"] = avgWait; 
-            consInfoMap[typeCasted]["Throughput"] = (double)this->consByRob[i] /  (double)simTotalTime; 
+            consInfoMap[typeCasted]["Throughput"] = (double)this->consByRob[i] / ((double)simTotalTime / 1000); 
             consInfoMap[typeCasted]["Total Requests"] = this->consByType[i];
         }
         this->signal_all_cond((int)ConsumerTypeN, (int)RequestTypeN);                      // We signal all our conditions per consumer thread and request threads so no threads are blocked
