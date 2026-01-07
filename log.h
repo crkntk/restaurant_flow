@@ -59,5 +59,20 @@ void output_request_removed(Consumers consumers, RequestType type,
  */
 void output_production_history(unsigned int produced[], unsigned int *consumed[]);
 
+/*This function outputs two tables for time metrics of per type and consumer
+THe table gives the following metrics
+Per Type table:
+"Type", "Avg Wait (ms)", "Max Wait (ms)", "Total Served"
+
+Per Consumer table:
+"Consumer", "Total Requests", "Avg Wait (ms)", "Throughput req/sec"
+
+The first input is a map of request type with value of a map of the string with the table headers above to the value
+
+The second is a map of per consumer type with a value of map of the table headers above with its value
+
+The types and request names are gotten from the arrays that map the enumerators to the string names in log.cpp
+
+*/
 void output_consumed_table(map<RequestType, map<string, double> > requestInfoMap, map<ConsumerType, map<string, double> > consInfoMap);
 #endif

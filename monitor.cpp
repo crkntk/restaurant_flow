@@ -130,39 +130,47 @@ int Monitor::insert(RequestType request)
         }
     }
     else if (this->policy == "fair"){
+        //This branch is for when our policy is fair policy We need to check on average wich type on average has more in the queeu
         const float n = static_cast<float>(MONITOR_GEN_CAP);   // or this->normalCapacity
         const float vip = static_cast<float>(this->queueVipReq);
         const float gen = static_cast<float>(this->queueGenReq - this->queueVipReq); // non-VIP
 
-        const float pg = gen / n;
-        const float pv = vip / n;
-        const float diff = pg - pv;
+        const float pg = gen / n; //average amount to general request
+        const float pv = vip / n;   //proportion of vip request
+        const float diff = pg - pv; //difference in proportions
 
-        const float z = 1.96f; // 95%
+        const float z = 1.96f; // 95% confidence
         const float var = (pg + pv - diff * diff) / n;         // multinomial covariance handled
-        const float se = (var > 0.0f) ? std::sqrt(var) : 0.0f;
-        const float threshold = z * se;
+        const float se = (var > 0.0f) ? std::sqrt(var) : 0.0f; //Standard error
+        const float threshold = z * se; //The thresholc we want
         if(diff> threshold){
+            //We check to see if our difference is greater than our threshold
             if(request == VIPRoom){
+                //Branch for vip if our vip has been served more this must have a lower priority
                 insReqObj.priority = 1;
                 insReqObj.request = request;
             }
             else{
+                //Branch for general request if our general hasn't been served as much on average
                 insReqObj.priority = 2;
                 insReqObj.request = request;
             }
         }
         else if (diff < -threshold){
+            //If our differnce in averages is below our threshold value for confidence
             if(request == VIPRoom){
+                //This means we want to give priority to our vip since vip has been served less
                 insReqObj.priority = 2;
                 insReqObj.request = request;
             }
             else{
+                //General gets less priority set to 1
                 insReqObj.priority = 1;
                 insReqObj.request = request;
             }
         }
         else{
+            //If we are withing the threshiold then both vip and general get the same priority
             insReqObj.priority = 1;
             insReqObj.request = request;
         }
@@ -223,18 +231,19 @@ int Monitor::remove(Consumers robot)
     RequestObj remReqObj = this->buffer.top();
     request = remReqObj.request;           // Get the request from the front of our queue and store
     this->buffer.pop();                       // pop the request from our queue
-    remReqObj.dequeuedAt = chrono::steady_clock::now();
-    chrono::steady_clock::duration elapsed_time = remReqObj.dequeuedAt - remReqObj.createdAt;
-    remReqObj.waitTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
-    elapsed_time = remReqObj.completedAt - remReqObj.dequeuedAt;
-    remReqObj.serviceTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
-    elapsed_time = remReqObj.completedAt - remReqObj.createdAt;
-    remReqObj.totalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();
-    this->waitByType[request] += remReqObj.waitTime;
-    this->waitByRob[robot] += remReqObj.waitTime;
-    double currRobMax = this->maxWaitByType[request];
-    if(currRobMax<remReqObj.waitTime){
-        this->maxWaitByType[request] = remReqObj.waitTime;
+    remReqObj.dequeuedAt = chrono::steady_clock::now();     //Set dequeued at parameter for object after it
+    chrono::steady_clock::duration elapsed_time = remReqObj.dequeuedAt - remReqObj.createdAt;       //calculate the elapsed time between remouved and created for wait time
+    remReqObj.waitTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();    //Get the count from the chrono time object in milliseconds and casted a double
+    elapsed_time = remReqObj.completedAt - remReqObj.dequeuedAt;                        //Get completed at for the request minus the time it was removed for the service time
+    remReqObj.serviceTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();     //Get count for time object to get the service time
+    elapsed_time = remReqObj.completedAt - remReqObj.createdAt;                 //We ge the difference from complete at to crated to get the total time of the request
+    remReqObj.totalTime = chrono::duration_cast<std::chrono::milliseconds>(elapsed_time).count();       //We get the count of the time object to get the amount of time and cast it in milliseconds 
+    this->waitByType[request] += remReqObj.waitTime;    // Increase the wait time in our array for the current request type
+    this->waitByRob[robot] += remReqObj.waitTime;       // Increase the waitime for the robot serving this request to keep track of the wait time per robot
+    double currReqMax = this->maxWaitByType[request];   // Get the current max wait time for this request from our array
+    if(currReqMax<remReqObj.waitTime){
+        //This branch is for when there is a greater max for this request type
+        this->maxWaitByType[request] = remReqObj.waitTime;  //We set the higher max for this request type in our array
     }
     this->queueGenReq -= 1;                   // We update the amount of requests in our buffer
     this->consByRob[robot] += 1;              // Update the amount of request that have been consumed for this consumer/Robot
