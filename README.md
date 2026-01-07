@@ -36,7 +36,7 @@ Overview
       
       pthread_cond_t for coordination (queue full/empty + VIP capacity constraint)
       
-      FIFO correctness under nondeterministic scheduling
+      priority queue correctness under nondeterministic scheduling
       
       Precedence constraint / shutdown signaling using an unnamed semaphore (barrier)
       
@@ -63,7 +63,7 @@ Run
       ./dineseating
       
       With options:
-      ./dineseating -s N -x N -r N -g N -v N
+      ./dineseating -s N -x N -r N -g N -v N -p POLICY
       
       Options (all optional):
       
@@ -76,6 +76,8 @@ Run
       -g N Average produce time (ms) for General-table producer thread
       
       -v N Average produce time (ms) for VIP producer thread
+      
+      -p POLICY Policy type fifo by default can be "vip_priority" and "fair" gives different types of policy priorities
 
 Notes:
 
@@ -87,7 +89,7 @@ Notes:
       
       The Monitor owns:
       
-      A FIFO queue<RequestType> buffer
+      A priority queue<RequestType> buffer priority dependend on policy can be fifo,vip_priority or fair
       
       Counters for:
       
@@ -154,6 +156,8 @@ Notes:
       If the last request has been consumed AND production is complete:
       
       prints final production/consumption history
+
+      prints out a table of time metrics per type of request and another table of time metrics per consumer type see log.h and log.cpp for info
       
       posts the barrier semaphore to allow main() to exit
 
