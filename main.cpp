@@ -24,10 +24,13 @@ int main(int argc, char **argv)
     int sleepRev9 = 0;    // Default time for our Rev 9 robot thread
     int sleepGen = 0;     // Default sleep time for our general producer thread
     int sleepVip = 0;     // Default time for our vip seat producer thread
+    int numGenProd = 1;   // Number of General request producers
+    int numVipProd = 1;   // Number of Vip request producers
+    int numCons = 2;      // Number of Consumers
     string policy = "fifo";
     // We extract above default optional arguments
     int option;
-    while ((option = getopt(argc, argv, "s:x:r:g:v:p:")) != -1)
+    while ((option = getopt(argc, argv, "s:x:r:g:v:p:Pg:Pv:C:")) != -1)
     {
         /* If the option has an argument, optarg is set to point to the
          * argument associated with the option.  For example, if
@@ -52,7 +55,13 @@ int main(int argc, char **argv)
             sleepVip = atoi(optarg); // Sleep time for our vip producer thread
             break;
         case 'p':
-            policy = optarg;
+            policy = optarg; // Policy for our monitor
+        case 'Pg':
+            numGenProd = atoi(optarg);
+        case 'Pv':
+            numVipProd = atoi(optarg);
+        case 'C':
+            numCons = atoi(optarg);
         default:
             break;
         }

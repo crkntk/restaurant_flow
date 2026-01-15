@@ -1,7 +1,10 @@
 // Name: Carlos Reyes REDID: 131068259
+#include <map>
+#include <string>
+
 #ifndef SEATING_H
 #define SEATING_H
-
+using namespace std;
 /*
  * Arrays with producer and consumer names
  * These can be indexed with the enumerated types below
@@ -31,13 +34,19 @@ extern const char *consumerNames[];
  * Each producer only deals with one type of requests,
  * so RequestType is synomonous with the producer type
  */
-typedef enum Requests
+// typedef enum Requests
+// {
+//   GeneralTable = 0, // General table request
+//   VIPRoom = 1,      // VIP room request
+//   RequestTypeN = 2, // number of trade request types
+// } RequestType;
+struct Request
 {
-  GeneralTable = 0, // General table request
-  VIPRoom = 1,      // VIP room request
-  RequestTypeN = 2, // number of trade request types
-} RequestType;
+  int reqNum;
+  string type;
+};
 
+map<std::string, Request> Requests{{"GeneralTable-0", {0, "General"}}, {"VIP-0", {0, "VIP"}}};
 /*
  * Two concierge robots are used for consuming requests:
  *   Requests are taken off from the request queue (by consumers)
